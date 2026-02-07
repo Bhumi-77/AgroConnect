@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  FARMER
+  BUYER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  COD
+  ESEWA
+}
+
+model User {
+  id           String   @id @default(cuid())
+  fullName     String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  phone        String?
+  address      String?
+  district     String?
+  municipality String?
+  ward         String?
+  latitude     Float?
+  longitude    Float?
+  language     String   @default("en") // "en" or "np"
+  isVerified   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  crops        Crop[]    @relation("FarmerCrops")
+  orders       Order[]   @relation("BuyerOrders")
+  sentMessages Message[] @relation("SentMessages")
+
+  // ✅ Opposite field for DemandPost.buyer
+  demandPosts DemandPost[] @relation("BuyerDemandPosts")
+
+  // ✅ Opposite fields for ChatRoom buyer/farmer relations
+  buyerChatRooms  ChatRoom[] @relation("BuyerChatRooms")
+  farmerChatRooms ChatRoom[] @relation("FarmerChatRooms")
+}
+
+model Crop {
+  id       String @id @default(cuid())
+  farmerId String
+  farmer   User   @relation("FarmerCrops", fields: [farmerId], references: [id], onDelete: Cascade)
+
+  titleEn       String
+  titleNp       String
+  category      String // fruits | vegetables | grains | other
+  descriptionEn String?
+  descriptionNp String?
+  qualityGrade  String? // A/B/C
+  unit          String // kg | quintal
+  price         Float
+  quantity      Float
+  images        String[] // stored file paths / urls
+  isActive      Boolean  @default(true)
+  district      String?
+  municipality  String?
+  latitude      Float?
+  longitude     Float?
+
+  inventory  Inventory?
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Inventory {
+  id                String   @id @default(cuid())
+  cropId            String   @unique
+  crop              Crop     @relation(fields: [cropId], references: [id], onDelete: Cascade)
+  available         Float    @default(0)
+  reserved          Float    @default(0)
+  sold              Float    @default(0)
+  lowStockThreshold Float    @default(5)
+  updatedAt         DateTime @updatedAt
+}
+
+model DemandPost {
+  id      String @id @default(cuid())
+  buyerId String
+  buyer   User   @relation("BuyerDemandPosts", fields: [buyerId], references: [id], onDelete: Cascade)
+
+  titleEn      String
+  titleNp      String
+  category     String
+  quantity     Float
+  unit         String
+  district     String?
+  municipality String?
+  createdAt    DateTime @default(now())
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  buyerId         String
+  buyer           User          @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
+  status          OrderStatus   @default(PENDING)
+  paymentMethod   PaymentMethod
+  totalAmount     Float
+  deliveryAddress String?
+  district        String?
+  municipality    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  items   OrderItem[]
+  payment Payment?
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  cropId    String
+  crop      Crop   @relation(fields: [cropId], references: [id])
+  quantity  Float
+  unitPrice Float
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  orderId   String        @unique
+  order     Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  method    PaymentMethod
+  status    String // initiated | success | failed
+  ref       String? // gateway reference
+  createdAt DateTime      @default(now())
+}
+
+model ChatRoom {
+  id        String   @id @default(cuid())
+  buyerId   String
+  farmerId  String
+  createdAt DateTime @default(now())
+
+  // ✅ Add proper relations so Prisma knows buyerId/farmerId point to User
+  buyer  User @relation("BuyerChatRooms", fields: [buyerId], references: [id], onDelete: Cascade)
+  farmer User @relation("FarmerChatRooms", fields: [farmerId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  @@unique([buyerId, farmerId])
+}
+
+model Message {
+  id     String   @id @default(cuid())
+  roomId String
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  senderId String
+  sender   User   @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  text      String
+  createdAt DateTime @default(now())
+}

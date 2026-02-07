@@ -1,0 +1,1 @@
+Uploads are stored under backend/uploads and referenced as /uploads/<file>. Configure static serving in index.js if needed.
