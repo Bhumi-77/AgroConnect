@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { requireAuth } from "../middleware/auth.js";
+import { listMarketPrices, createMarketPrice, predictMarketPrice } from "../controllers/price.controller.js";
 
 // Demo AI price prediction endpoint.
 // Replace with your real ML model/service later.
@@ -10,6 +12,10 @@ const BASE = {
   grains: 90,
   other: 100
 };
+
+router.get("/", listMarketPrices);
+router.post("/", requireAuth, createMarketPrice);
+router.post("/predict", requireAuth, predictMarketPrice);
 
 router.get('/predict', async (req, res) => {
   const { category = 'other', qualityGrade = 'B', district = 'Unknown' } = req.query;

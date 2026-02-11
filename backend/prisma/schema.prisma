@@ -45,6 +45,8 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+ pricePredictions PricePrediction[]
+ 
   crops        Crop[]    @relation("FarmerCrops")
   orders       Order[]   @relation("BuyerOrders")
   sentMessages Message[] @relation("SentMessages")
@@ -173,4 +175,37 @@ model Message {
 
   text      String
   createdAt DateTime @default(now())
+}
+
+model MarketPrice {
+  id           String   @id @default(cuid())
+  cropName     String
+  district     String
+  municipality String?
+  unit         String   @default("kg")
+  price        Float
+  date         DateTime @default(now())
+
+  createdAt    DateTime @default(now())
+
+  @@index([cropName, district, date])
+}
+
+model PricePrediction {
+  id           String   @id @default(cuid())
+  cropName     String
+  district     String
+  municipality String?
+  unit         String   @default("kg")
+
+  horizonDays  Int
+  predicted    Float
+  confidence   Float   @default(0.6)
+
+  createdById  String?
+  createdBy    User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt    DateTime @default(now())
+
+  @@index([cropName, district, createdAt])
 }

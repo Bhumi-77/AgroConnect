@@ -106,10 +106,54 @@ router.get('/mine', requireAuth, requireRole('BUYER'), async (req, res) => {
 router.get('/farmer/sales', requireAuth, requireRole('FARMER'), async (req, res) => {
   const orders = await prisma.order.findMany({
     where: { items: { some: { crop: { farmerId: req.user.id } } } },
-    include: { items: { include: { crop: true } }, buyer: { select: { id:true, fullName:true, phone:true } }, payment: true },
+    include: {
+      items: { include: { crop: true } },
+      buyer: { select: { id:true, fullName:true, phone:true, email:true } },
+      payment: true
+    },
     orderBy: { createdAt: 'desc' }
   });
   res.json({ ok:true, orders });
+});
+
+// ✅ Farmer updates order status (this was missing)
+// PATCH /api/orders/:id/status  body: { status: "CONFIRMED" | "DELIVERED" | "CANCELLED" }
+router.patch('/:id/status', requireAuth, requireRole('FARMER'), async (req, res) => {
+  const orderId = req.params.id;
+  const { status } = req.body || {};
+
+  const allowed = ['PENDING', 'CONFIRMED', 'DELIVERED', 'CANCELLED'];
+  if (!allowed.includes(status)) {
+    return res.status(400).json({ ok: false, error: 'Invalid status' });
+  }
+
+  // load order + items + crop farmerId so we can authorize this farmer
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: { include: { crop: { select: { id: true, farmerId: true } } } } }
+  });
+  if (!order) return res.status(404).json({ ok:false, error:'Order not found' });
+
+  // authorize: only farmer who owns at least one crop in this order can update it
+  const ownsAny = order.items.some(it => it.crop?.farmerId === req.user.id);
+  if (!ownsAny) return res.status(403).json({ ok:false, error:'Forbidden' });
+
+  // (optional) prevent changing after delivered/cancelled
+  if (order.status === 'DELIVERED' || order.status === 'CANCELLED') {
+    return res.status(400).json({ ok:false, error:`Cannot change status after ${order.status}` });
+  }
+
+  const updated = await prisma.order.update({
+    where: { id: orderId },
+    data: { status },
+    include: {
+      items: { include: { crop: true } },
+      buyer: { select: { id:true, fullName:true, phone:true, email:true } },
+      payment: true
+    }
+  });
+
+  res.json({ ok:true, order: updated });
 });
 
 export default router;
