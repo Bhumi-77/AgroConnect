@@ -5,12 +5,12 @@ import pandas as pd
 import datetime as dt
 
 app = FastAPI()
+
 MODEL_PATH = "model.joblib"
 model = joblib.load(MODEL_PATH)
 
 class PredictRequest(BaseModel):
-    cropName: str
-    district: str
+    product: str
     horizonDays: int = 7
 
 @app.post("/predict")
@@ -18,17 +18,17 @@ def predict(req: PredictRequest):
     future_date = dt.datetime.now() + dt.timedelta(days=req.horizonDays)
 
     X = pd.DataFrame([{
-        "cropName": req.cropName,
-        "district": req.district,
+        "product": req.product,
         "dayofweek": future_date.weekday(),
-        "month": future_date.month,
+        "month": future_date.month
     }])
 
-    pred = float(model.predict(X)[0])
+    predicted = float(model.predict(X)[0])
 
     return {
         "ok": True,
-        "predicted": round(pred, 2),
-        "confidence": 0.75,   # you can improve later using model variance
-        "modelVersion": "v1.0"
+        "product": req.product,
+        "predictedPrice": round(predicted, 2),
+        "currency": "NPR",
+        "model": "RandomForest v1"
     }

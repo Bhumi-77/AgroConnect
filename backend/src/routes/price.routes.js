@@ -14,20 +14,20 @@ const BASE = {
 };
 
 router.get("/", listMarketPrices);
-router.post("/", requireAuth, createMarketPrice);
+router.post("/", requireAuth, createMarketPrice); 
 router.post("/predict", requireAuth, predictMarketPrice);
 
-router.get('/predict', async (req, res) => {
-  const { category = 'other', qualityGrade = 'B', district = 'Unknown' } = req.query;
+// router.get('/predict', async (req, res) => {
+//   const { category = 'other', qualityGrade = 'B', district = 'Unknown' } = req.query;
 
-  const base = BASE[String(category)] ?? BASE.other;
-  const qMult = String(qualityGrade).toUpperCase() === 'A' ? 1.15 : String(qualityGrade).toUpperCase() === 'C' ? 0.9 : 1.0;
-  // small location adjustment (demo)
-  const locMult = ['Kathmandu','Lalitpur','Bhaktapur'].includes(String(district)) ? 1.05 : 1.0;
+//   const base = BASE[String(category)] ?? BASE.other;
+//   const qMult = String(qualityGrade).toUpperCase() === 'A' ? 1.15 : String(qualityGrade).toUpperCase() === 'C' ? 0.9 : 1.0;
+//   // small location adjustment (demo)
+//   const locMult = ['Kathmandu','Lalitpur','Bhaktapur'].includes(String(district)) ? 1.05 : 1.0;
 
-  const predicted = Math.round(base * qMult * locMult);
+//   const predicted = Math.round(base * qMult * locMult);
 
-  res.json({ ok:true, predictedPricePerKg: predicted, note: 'Demo prediction (replace with real model)' });
-});
+//   res.json({ ok:true, predictedPricePerKg: predicted, note: 'Demo prediction (replace with real model)' });
+// });
 
 export default router;

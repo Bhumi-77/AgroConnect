@@ -9,16 +9,39 @@ export async function predictMarketPrice(req, res) {
   }
 
   try {
-    const mlUrl = process.env.ML_URL || "http://localhost:8000";
+    // support both env names (keep your current one)
+    const mlUrl =
+      process.env.ML_URL ||
+      process.env.ML_SERVICE_URL ||
+      "http://127.0.0.1:8000";
 
+    // ✅ FastAPI expects: { product, horizonDays, district? }
     const { data } = await axios.post(`${mlUrl}/predict`, {
-      cropName,
+      product: cropName, // IMPORTANT: map cropName -> product
       district,
       horizonDays: Number(horizonDays),
     });
 
     if (!data?.ok) {
-      return res.status(500).json({ ok: false, error: "ML service failed" });
+      return res.status(500).json({
+        ok: false,
+        error: "ML service failed",
+        details: data,
+      });
+    }
+
+    // ✅ Support both possible field names from ML
+    const predicted =
+      data.predictedPrice ?? // from my updated FastAPI
+      data.predicted ??      // if your FastAPI still returns predicted
+      data.predicted_price ?? null;
+
+    if (predicted == null) {
+      return res.status(500).json({
+        ok: false,
+        error: "ML response missing predicted value",
+        details: data,
+      });
     }
 
     // optional log in DB
@@ -28,19 +51,32 @@ export async function predictMarketPrice(req, res) {
         district,
         municipality: municipality || null,
         horizonDays: Number(horizonDays),
-        predicted: data.predicted,
+        predicted: Number(predicted),
         confidence: data.confidence ?? 0.6,
-        modelVersion: data.modelVersion || "v1.0",
+        modelVersion: data.modelVersion || data.model || "v1.0",
         createdById: req.user?.id || null,
       },
     });
 
-    res.json({ ok: true, ...data });
+    // keep response shape same for frontend, but include predicted
+    res.json({
+      ok: true,
+      predicted: Number(predicted),
+      confidence: data.confidence ?? 0.6,
+      modelVersion: data.modelVersion || data.model || "v1.0",
+      raw: data, // helpful while debugging; you can remove later
+    });
   } catch (e) {
+    // ✅ show ML error response if exists
+    const details =
+      e?.response?.data?.detail ||
+      e?.response?.data ||
+      e?.message;
+
     res.status(500).json({
       ok: false,
       error: "Prediction failed",
-      details: e?.message,
+      details,
     });
   }
 }
