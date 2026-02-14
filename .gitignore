@@ -3,3 +3,11 @@ node_modules
 dist
 uploads
 *.log
+# .model.joblib
+
+# ML artifacts
+ml-service/model.joblib
+ml-service/*.joblib
+ml-service/__pycache__/
+ml-service/.venv/
+ml-service/.env
