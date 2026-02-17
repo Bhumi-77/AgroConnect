@@ -1,17 +1,37 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 import joblib
+from pydantic import BaseModel
 import pandas as pd
 import datetime as dt
+import json
+from pathlib import Path
 
 app = FastAPI()
 
-MODEL_PATH = "model.joblib"
+# ✅ allow frontend/backend to call ML service
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+BASE_DIR = Path(__file__).resolve().parent
+
+MODEL_PATH = BASE_DIR / "model.joblib"
 model = joblib.load(MODEL_PATH)
+
+PRODUCTS_PATH = BASE_DIR / "products.json"
 
 class PredictRequest(BaseModel):
     product: str
     horizonDays: int = 7
+
+@app.get("/products")
+def products():
+    return json.loads(PRODUCTS_PATH.read_text(encoding="utf-8"))
 
 @app.post("/predict")
 def predict(req: PredictRequest):
@@ -23,12 +43,11 @@ def predict(req: PredictRequest):
         "month": future_date.month
     }])
 
-    predicted = float(model.predict(X)[0])
+    pred = float(model.predict(X)[0])
 
     return {
         "ok": True,
-        "product": req.product,
-        "predictedPrice": round(predicted, 2),
-        "currency": "NPR",
-        "model": "RandomForest v1"
+        "predicted": round(pred, 2),
+        "confidence": 0.6,
+        "modelVersion": "RandomForest v1"
     }
