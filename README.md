@@ -52,7 +52,18 @@ Frontend: `http://localhost:5173`
 
 ---
 
-## 4) Demo Features Map
+## 4) ml-service
+cd ml-service
+python -m venv .venv
+python -m pip install -r requirements.txt
+
+python -m uvicorn app:app --host 127.0.0.1 --port 8000
+ML_URL=http://127.0.0.1:8000
+
+files ignored by git 
+
+
+## 5) Demo Features Map
 - Role-based Login/Register (Farmer, Buyer) + Admin login (seeded)
 - Farmer:
   - Dashboard: crops + inventory status
@@ -80,4 +91,5 @@ Frontend: `http://localhost:5173`
 krishi-connect/
   backend/
   frontend/
+  ml-service
 ```
