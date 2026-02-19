@@ -45,7 +45,14 @@ router.get('/', async (req, res) => {
     orderBy: { createdAt: 'desc' }
   });
 
-  res.json({ ok:true, crops });
+  // ✅ add computed stock fields for frontend
+  const cropsWithStock = crops.map(c => ({
+    ...c,
+    availableQty: c.inventory?.available ?? 0,
+    inStock: (c.inventory?.available ?? 0) > 0
+  }));
+
+  res.json({ ok:true, crops: cropsWithStock });
 });
 
 router.get('/:id', async (req, res) => {
@@ -54,7 +61,15 @@ router.get('/:id', async (req, res) => {
     include: { farmer: { select: { id:true, fullName:true, district:true, municipality:true, phone:true, isVerified:true } }, inventory: true }
   });
   if (!crop) return res.status(404).json({ ok:false, error:'Crop not found' });
-  res.json({ ok:true, crop });
+
+  // ✅ add computed stock fields for frontend
+  const cropWithStock = {
+    ...crop,
+    availableQty: crop.inventory?.available ?? 0,
+    inStock: (crop.inventory?.available ?? 0) > 0
+  };
+
+  res.json({ ok:true, crop: cropWithStock });
 });
 
 router.post('/',
@@ -90,20 +105,30 @@ router.post('/',
       include: { inventory: true }
     });
 
-    res.json({ ok:true, crop });
+    // ✅ add computed stock fields for response consistency
+    const cropWithStock = {
+      ...crop,
+      availableQty: crop.inventory?.available ?? 0,
+      inStock: (crop.inventory?.available ?? 0) > 0
+    };
+
+    res.json({ ok:true, crop: cropWithStock });
   }
 );
 
 router.put('/:id', requireAuth, requireRole('FARMER'), async (req, res) => {
-  const crop = await prisma.crop.findUnique({ where: { id: req.params.id } });
+  const crop = await prisma.crop.findUnique({ where: { id: req.params.id }, include: { inventory: true } });
   if (!crop) return res.status(404).json({ ok:false, error:'Not found' });
   if (crop.farmerId !== req.user.id) return res.status(403).json({ ok:false, error:'Forbidden' });
 
   const {
     titleEn, titleNp, category, descriptionEn, descriptionNp,
     qualityGrade, unit, price, isActive,
-    district, municipality, latitude, longitude
+    district, municipality, latitude, longitude,
+    quantity // ✅ allow updating quantity -> also update inventory.available
   } = req.body;
+
+  const qty = quantity !== undefined ? Number(quantity) : undefined;
 
   const updated = await prisma.crop.update({
     where: { id: crop.id },
@@ -115,11 +140,23 @@ router.put('/:id', requireAuth, requireRole('FARMER'), async (req, res) => {
       district, municipality,
       latitude: latitude !== undefined ? (latitude === null ? null : Number(latitude)) : undefined,
       longitude: longitude !== undefined ? (longitude === null ? null : Number(longitude)) : undefined,
+      quantity: qty !== undefined ? qty : undefined,
+
+      // ✅ keep inventory available synced if farmer updates quantity
+      inventory: qty !== undefined
+        ? { upsert: { create: { available: qty, reserved: 0, sold: 0 }, update: { available: qty } } }
+        : undefined
     },
     include: { inventory: true }
   });
 
-  res.json({ ok:true, crop: updated });
+  const updatedWithStock = {
+    ...updated,
+    availableQty: updated.inventory?.available ?? 0,
+    inStock: (updated.inventory?.available ?? 0) > 0
+  };
+
+  res.json({ ok:true, crop: updatedWithStock });
 });
 
 router.delete('/:id', requireAuth, requireRole('FARMER'), async (req, res) => {
@@ -137,7 +174,14 @@ router.get('/farmer/mine/list', requireAuth, requireRole('FARMER'), async (req, 
     include: { inventory: true },
     orderBy: { createdAt: 'desc' }
   });
-  res.json({ ok:true, crops });
+
+  const cropsWithStock = crops.map(c => ({
+    ...c,
+    availableQty: c.inventory?.available ?? 0,
+    inStock: (c.inventory?.available ?? 0) > 0
+  }));
+
+  res.json({ ok:true, crops: cropsWithStock });
 });
 
 export default router;

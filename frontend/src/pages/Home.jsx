@@ -151,10 +151,10 @@ export default function Home() {
                 e.target.style.transform = 'translateY(0)';
               }}
             >
-              Get Started
+              Get Started with market 
             </Link>
             
-            <Link
+            {/* <Link
               to="/register"
               style={{
                 display: 'inline-block',
@@ -179,7 +179,7 @@ export default function Home() {
               }}
             >
               Learn More
-            </Link>
+            </Link> */}
           </div>
         </div>
       </div>

@@ -34,8 +34,13 @@ export default function Checkout() {
 
   // load cart + user defaults
   useEffect(() => {
-    const raw = localStorage.getItem("cart");
-    const parsed = raw ? JSON.parse(raw) : [];
+    let parsed = [];
+    try {
+      const raw = localStorage.getItem("cart");
+      parsed = raw ? JSON.parse(raw) : [];
+    } catch {
+      parsed = [];
+    }
     setCart(Array.isArray(parsed) ? parsed : []);
 
     setDeliveryAddress(user?.address || "");
@@ -56,7 +61,6 @@ export default function Checkout() {
 
     if (!user) return nav("/login");
     if (user.role !== "BUYER") return setErr("Only buyers can checkout.");
-
     if (!cart.length) return setErr("Cart is empty.");
 
     try {
@@ -84,8 +88,8 @@ export default function Checkout() {
       }
 
       // 3) If eSewa -> initiate payment and redirect via form POST
-      // IMPORTANT: this endpoint must exist in backend (paymentEsewa.routes.js)
-      const init = await api.post(`/api/payment/esewa/initiate`, { orderId });
+      // ✅ FIXED: /api/payments (not /api/payment)
+      const init = await api.post(`/api/payments/esewa/initiate`, { orderId });
 
       if (!init.data?.ok) throw new Error(init.data?.error || "eSewa initiate failed");
       postToEsewa(init.data.formUrl, init.data.fields);
