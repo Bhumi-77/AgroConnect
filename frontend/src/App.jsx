@@ -8,6 +8,7 @@ import PaymentFailure from './pages/PaymentFailure.jsx';
 import Checkout from "./pages/Checkout.jsx";
 import PricePrediction from "./pages/PricePrediction.jsx";
 
+
 import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
