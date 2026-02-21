@@ -6,63 +6,77 @@ const router = Router();
 
 // Create order (buyer)
 router.post('/', requireAuth, requireRole('BUYER'), async (req, res) => {
-  const { items, paymentMethod, deliveryAddress, district, municipality } = req.body;
-  if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ ok:false, error:'No items' });
-  if (!['COD','ESEWA'].includes(paymentMethod)) return res.status(400).json({ ok:false, error:'Invalid payment method' });
+  try {
+    const { items, paymentMethod, deliveryAddress, district, municipality } = req.body;
+    if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ ok:false, error:'No items' });
+    if (!['COD','ESEWA'].includes(paymentMethod)) return res.status(400).json({ ok:false, error:'Invalid payment method' });
 
-  // compute totals + reserve inventory transactionally
-  const result = await prisma.$transaction(async (tx) => {
-    let total = 0;
+    // compute totals + reserve inventory transactionally
+    const result = await prisma.$transaction(async (tx) => {
+      let total = 0;
 
-    // fetch crops
-    const cropIds = items.map(i => i.cropId);
-    const crops = await tx.crop.findMany({ where: { id: { in: cropIds }, isActive: true }, include: { inventory: true } });
-    const map = new Map(crops.map(c => [c.id, c]));
+      // fetch crops
+      const cropIds = items.map(i => i.cropId);
+      const crops = await tx.crop.findMany({ where: { id: { in: cropIds }, isActive: true }, include: { inventory: true } });
+      const map = new Map(crops.map(c => [c.id, c]));
 
-    for (const it of items) {
-      const crop = map.get(it.cropId);
-      if (!crop) throw new Error('Crop not found or inactive');
-      const qty = Number(it.quantity || 0);
-      if (qty <= 0) throw new Error('Invalid quantity');
-      if (!crop.inventory || crop.inventory.available < qty) throw new Error('Insufficient stock');
-      total += qty * crop.price;
-    }
+      for (const it of items) {
+        const crop = map.get(it.cropId);
+        if (!crop) throw new Error('Crop not found or inactive');
 
-    const order = await tx.order.create({
-      data: {
-        buyerId: req.user.id,
-        paymentMethod,
-        totalAmount: total,
-        deliveryAddress,
-        district, municipality,
-        items: {
-          create: items.map((it) => ({
-            cropId: it.cropId,
-            quantity: Number(it.quantity),
-            unitPrice: map.get(it.cropId).price,
-          }))
-        },
-        payment: {
-          create: { method: paymentMethod, status: paymentMethod === 'COD' ? 'pending' : 'initiated' }
+        const qty = Number(it.quantity || 0);
+        if (qty <= 0) throw new Error('Invalid quantity');
+
+        // ✅ clearer message for missing inventory
+        if (!crop.inventory) throw new Error('Inventory not initialized for this crop');
+
+        // ✅ clearer message for insufficient stock
+        if (crop.inventory.available < qty) {
+          throw new Error(`Insufficient stock. Available: ${crop.inventory.available}`);
         }
-      },
-      include: { items: true, payment: true }
+
+        total += qty * crop.price;
+      }
+
+      const order = await tx.order.create({
+        data: {
+          buyerId: req.user.id,
+          paymentMethod,
+          totalAmount: total,
+          deliveryAddress,
+          district, municipality,
+          items: {
+            create: items.map((it) => ({
+              cropId: it.cropId,
+              quantity: Number(it.quantity),
+              unitPrice: map.get(it.cropId).price,
+            }))
+          },
+          payment: {
+            create: { method: paymentMethod, status: paymentMethod === 'COD' ? 'pending' : 'initiated' }
+          }
+        },
+        include: { items: true, payment: true }
+      });
+
+      // reserve inventory
+      for (const it of items) {
+        const qty = Number(it.quantity);
+        const inv = map.get(it.cropId).inventory;
+        await tx.inventory.update({
+          where: { id: inv.id },
+          data: { available: { decrement: qty }, reserved: { increment: qty } }
+        });
+      }
+
+      return order;
     });
 
-    // reserve inventory
-    for (const it of items) {
-      const qty = Number(it.quantity);
-      const inv = map.get(it.cropId).inventory;
-      await tx.inventory.update({
-        where: { id: inv.id },
-        data: { available: { decrement: qty }, reserved: { increment: qty } }
-      });
-    }
-
-    return order;
-  });
-
-  res.json({ ok:true, order: result });
+    res.json({ ok:true, order: result });
+  } catch (err) {
+    console.error("Create order error:", err);
+    return res.status(400).json({ ok:false, error: err.message || "Order failed" });
+  }
 });
 
 // Mark payment success (demo endpoint) - for eSewa callback simulation
