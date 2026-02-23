@@ -55,6 +55,27 @@ router.get('/', async (req, res) => {
   res.json({ ok:true, crops: cropsWithStock });
 });
 
+/**
+ * ✅ IMPORTANT FIX #1:
+ * This route MUST come BEFORE "/:id"
+ * otherwise Express will treat "farmer" as an "id"
+ */
+router.get('/farmer/mine/list', requireAuth, requireRole('FARMER'), async (req, res) => {
+  const crops = await prisma.crop.findMany({
+    where: { farmerId: req.user.id },
+    include: { inventory: true },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const cropsWithStock = crops.map(c => ({
+    ...c,
+    availableQty: c.inventory?.available ?? 0,
+    inStock: (c.inventory?.available ?? 0) > 0
+  }));
+
+  res.json({ ok:true, crops: cropsWithStock });
+});
+
 router.get('/:id', async (req, res) => {
   const crop = await prisma.crop.findUnique({
     where: { id: req.params.id },
@@ -164,24 +185,17 @@ router.delete('/:id', requireAuth, requireRole('FARMER'), async (req, res) => {
   if (!crop) return res.status(404).json({ ok:false, error:'Not found' });
   if (crop.farmerId !== req.user.id) return res.status(403).json({ ok:false, error:'Forbidden' });
 
-  await prisma.crop.delete({ where: { id: crop.id } });
-  res.json({ ok:true });
-});
-
-router.get('/farmer/mine/list', requireAuth, requireRole('FARMER'), async (req, res) => {
-  const crops = await prisma.crop.findMany({
-    where: { farmerId: req.user.id },
-    include: { inventory: true },
-    orderBy: { createdAt: 'desc' }
+  /**
+   * ✅ IMPORTANT FIX #2:
+   * Soft delete instead of hard delete
+   * because OrderItem has FK to Crop (prevents delete)
+   */
+  await prisma.crop.update({
+    where: { id: crop.id },
+    data: { isActive: false }
   });
 
-  const cropsWithStock = crops.map(c => ({
-    ...c,
-    availableQty: c.inventory?.available ?? 0,
-    inStock: (c.inventory?.available ?? 0) > 0
-  }));
-
-  res.json({ ok:true, crops: cropsWithStock });
+  res.json({ ok:true });
 });
 
 export default router;

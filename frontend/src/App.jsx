@@ -8,7 +8,6 @@ import PaymentFailure from './pages/PaymentFailure.jsx';
 import Checkout from "./pages/Checkout.jsx";
 import PricePrediction from "./pages/PricePrediction.jsx";
 
-
 import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
@@ -20,6 +19,9 @@ import AddCrop from './pages/farmer/AddCrop.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import Chat from './pages/Chat.jsx';
 import Profile from './pages/Profile.jsx';
+
+// ✅ ADD THIS import (adjust path/name to match your file)
+import EditCrop from './pages/farmer/EditCrop.jsx';
 
 function NavBar() {
   const { t, i18n } = useTranslation();
@@ -107,10 +109,13 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/price" element={<Protected roles={['BUYER','FARMER','ADMIN']}><PricePrediction /></Protected>} />
- 
+
         <Route path="/farmer" element={<Protected roles={['FARMER']}><FarmerDashboard /></Protected>} />
         <Route path="/farmer/add" element={<Protected roles={['FARMER']}><AddCrop /></Protected>} />
         <Route path="/farmer/orders" element={<Protected roles={['FARMER']}><FarmerOrders /></Protected>} />
+
+        {/* ✅ ADD THIS ROUTE so Edit works */}
+        <Route path="/farmer/edit/:id" element={<Protected roles={['FARMER']}><EditCrop /></Protected>} />
 
         <Route path="/admin" element={<Protected roles={['ADMIN']}><AdminDashboard /></Protected>} />
 

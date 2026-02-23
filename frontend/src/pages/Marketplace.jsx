@@ -15,6 +15,9 @@ export default function Marketplace() {
   const [district, setDistrict] = useState('');
   const [municipality, setMunicipality] = useState('');
 
+  // ✅ Backend URL for showing images
+  const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
   const fetchCrops = async () => {
     const { data } = await api.get('/api/crops', { params: { q, category, district, municipality } });
     if (data.ok) setCrops(data.crops);
@@ -457,6 +460,41 @@ export default function Marketplace() {
             const availableQty = c.availableQty ?? c.inventory?.available ?? c.quantity ?? 0;
             const inStock = c.inStock ?? availableQty > 0;
 
+            // ✅ Robust image extraction (array OR JSON string OR single string OR comma-separated)
+            const rawImages = c.images;
+
+            let firstImage = null;
+
+            if (Array.isArray(rawImages) && rawImages.length > 0) {
+              firstImage = rawImages[0];
+            } else if (typeof rawImages === 'string' && rawImages.trim()) {
+              const s = rawImages.trim();
+
+              // JSON string: '["/uploads/a.jpg"]'
+              if (s.startsWith('[') && s.endsWith(']')) {
+                try {
+                  const arr = JSON.parse(s);
+                  if (Array.isArray(arr) && arr.length > 0) firstImage = arr[0];
+                } catch {}
+              }
+
+              // comma-separated: "/uploads/a.jpg,/uploads/b.jpg"
+              if (!firstImage && s.includes(',')) {
+                firstImage = s.split(',')[0].trim();
+              }
+
+              // single string: "/uploads/a.jpg"
+              if (!firstImage) {
+                firstImage = s;
+              }
+            }
+
+            const imageUrl = firstImage
+              ? firstImage.startsWith('http')
+                ? firstImage
+                : `${BACKEND_URL}${firstImage.startsWith('/') ? '' : '/'}${firstImage}`
+              : null;
+
             return (
               <div
                 key={c.id}
@@ -477,6 +515,36 @@ export default function Marketplace() {
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
+                {/* ✅ Image area (this is what your screenshot shows as blank box) */}
+                <div
+                  style={{
+                    width: '100%',
+                    height: '180px',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    background: '#f3f4f6',
+                    border: '1px solid #eee',
+                    marginBottom: '16px',
+                  }}
+                >
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={c[titleKey]}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                      onError={(e) => {
+                        // if image fails, hide it so gray placeholder remains
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                </div>
+
                 <div
                   className="crop-card-content"
                   style={{
@@ -665,7 +733,6 @@ export default function Marketplace() {
 
                     {user?.role === 'BUYER' && (
                       inStock ? (
-                        // ✅ ESSENTIAL: add to cart + go checkout (instead of Link)
                         <button
                           type="button"
                           onClick={() => addToCartAndCheckout(c)}

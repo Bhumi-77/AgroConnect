@@ -6,6 +6,8 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { Server as SocketIOServer } from "socket.io";
 import { PrismaClient } from "@prisma/client";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import paymentEsewaRoutes from "./routes/paymentEsewa.routes.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -28,8 +30,11 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
-// Static files (uploaded images)
-app.use("/uploads", express.static("uploads"));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// ✅ serve uploaded files (absolute path)
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.get("/api/health", (req, res) =>
   res.json({ ok: true, service: "krishi-connect-api" })
@@ -42,7 +47,6 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/price", priceRoutes);
-
 
 // ✅ Keep this mount as-is (your frontend must call /api/payments/esewa/initiate)
 app.use("/api/payments", paymentEsewaRoutes);
