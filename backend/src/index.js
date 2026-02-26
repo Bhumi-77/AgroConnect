@@ -24,17 +24,60 @@ import { errorHandler, notFound } from "./middleware/error.js";
 export const prisma = new PrismaClient();
 
 const app = express();
-app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL || true, credentials: true }));
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan("dev"));
+
+// ✅ CORS configuration
+const corsOptions = {
+  origin: process.env.CLIENT_URL || "*",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ serve uploaded files (absolute path)
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+// ✅ CRITICAL: Serve uploads with NO security restrictions
+const uploadsPath = path.join(__dirname, "../uploads");
+
+app.use("/uploads", (req, res, next) => {
+  // Remove ALL security headers that might block images
+  res.removeHeader("Cross-Origin-Opener-Policy");
+  res.removeHeader("Cross-Origin-Embedder-Policy");
+  res.removeHeader("Cross-Origin-Resource-Policy");
+  
+  // Set permissive CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "*");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+app.use("/uploads", express.static(uploadsPath, {
+  setHeaders: (res, filepath, stat) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.removeHeader("Cross-Origin-Opener-Policy");
+    res.removeHeader("Cross-Origin-Embedder-Policy");
+  }
+}));
+
+// ✅ Configure helmet to NOT block cross-origin resources
+app.use(helmet({
+  crossOriginOpenerPolicy: { policy: "unsafe-none" },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
+
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan("dev"));
 
 app.get("/api/health", (req, res) =>
   res.json({ ok: true, service: "krishi-connect-api" })
@@ -48,7 +91,6 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/price", priceRoutes);
 
-// ✅ Keep this mount as-is (your frontend must call /api/payments/esewa/initiate)
 app.use("/api/payments", paymentEsewaRoutes);
 
 app.use(notFound);
@@ -56,7 +98,7 @@ app.use(errorHandler);
 
 const server = http.createServer(app);
 const io = new SocketIOServer(server, {
-  cors: { origin: process.env.CLIENT_URL || true, credentials: true },
+  cors: corsOptions,
 });
 
 io.use(authSocket);
