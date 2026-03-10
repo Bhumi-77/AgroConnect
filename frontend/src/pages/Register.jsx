@@ -3,18 +3,66 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix for default marker icon in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Location Picker Component for map clicks
+function LocationPicker({ onLocationSelect }) {
+  useMapEvents({
+    click(e) {
+      onLocationSelect(e.latlng);
+    },
+  });
+  return null;
+}
 
 export default function Register() {
   const { t } = useTranslation();
   const { setUser } = useAuth();
   const nav = useNavigate();
+  
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('BUYER');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [district, setDistrict] = useState('');
   const [municipality, setMunicipality] = useState('');
+  
+  // ✅ New states for phone and location
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+  
+  const [mapPosition, setMapPosition] = useState([28.3949, 84.1240]); // Default to Nepal
   const [err, setErr] = useState('');
+
+  const handleLocationSelect = (latlng) => {
+    setLatitude(latlng.lat);
+    setLongitude(latlng.lng);
+    setMapPosition([latlng.lat, latlng.lng]);
+    
+    // Optional: Reverse geocoding to get address (using OpenStreetMap Nominatim)
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&accept-language=en`)
+      .then(res => res.json())
+      .then(data => {
+        if (data?.display_name) {
+          setAddress(data.display_name);
+        }
+      })
+      .catch(() => {
+        // Silently fail if geocoding doesn't work
+      });
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -34,8 +82,11 @@ export default function Register() {
         password,
         district,
         municipality,
-        phone: '',
-        address: '',
+        // ✅ Include new fields
+        phone,
+        address,
+        latitude,
+        longitude,
         language: localStorage.getItem('lang') || 'en',
       };
 
@@ -107,6 +158,30 @@ export default function Register() {
           .form-row > div {
             width: 100% !important;
           }
+        }
+        /* Map container styles */
+        .map-container {
+          border-radius: 8px;
+          overflow: hidden;
+          border: 1px solid #e0e0e0;
+          margin-bottom: 12px;
+        }
+        .map-instructions {
+          font-size: 12px;
+          color: #666;
+          margin-bottom: 8px;
+        }
+        .selected-location {
+          background: #f5f5f5;
+          padding: 8px 12px;
+          border-radius: 6px;
+          font-size: 13px;
+          margin-top: 8px;
+        }
+        .location-coords {
+          font-family: monospace;
+          color: #4a7c3b;
+          font-size: 12px;
         }
       `}</style>
 
@@ -463,10 +538,42 @@ export default function Register() {
               </div>
             </div>
 
+            {/* ✅ New Phone Input Field */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#333',
+                marginBottom: '8px'
+              }}>
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                placeholder="Enter your phone number"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  transition: 'border 0.2s',
+                  boxSizing: 'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#4a7c3b'}
+                onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+              />
+            </div>
+
             <div className="form-row" style={{
               display: 'flex',
               gap: '16px',
-              marginBottom: '24px'
+              marginBottom: '20px'
             }}>
               <div style={{ flex: 1 }}>
                 <label style={{
@@ -529,6 +636,46 @@ export default function Register() {
                   onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
                 />
               </div>
+            </div>
+
+            {/* ✅ Map Integration Section */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#333',
+                marginBottom: '8px'
+              }}>
+                Select Your Location
+              </label>
+              <p className="map-instructions">Click on the map to set your location</p>
+              
+              <div className="map-container">
+                <MapContainer
+                  center={mapPosition}
+                  zoom={7}
+                  scrollWheelZoom={true}
+                  style={{ height: '200px', width: '100%' }}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  />
+                  <LocationPicker onLocationSelect={handleLocationSelect} />
+                  {latitude && longitude && <Marker position={[latitude, longitude]} />}
+                </MapContainer>
+              </div>
+              
+              {(latitude && longitude) && (
+                <div className="selected-location">
+                  <div>📍 Location selected</div>
+                  <div className="location-coords">
+                    Lat: {latitude.toFixed(6)}, Lng: {longitude.toFixed(6)}
+                  </div>
+                  {address && <div style={{marginTop: '4px', color: '#555'}}>📬 {address}</div>}
+                </div>
+              )}
             </div>
 
             <button

@@ -39,51 +39,199 @@ function NavBar() {
   };
 
   return (
-    <div className="nav">
-      <div className="inner">
-        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-          <Link to="/" style={{ fontSize: 18, fontWeight: 900 }}>{t('appName')}</Link>
-          <Link to="/market">{t('marketplace')}</Link>
+    <div style={{
+      background: 'linear-gradient(135deg, #4a7c3b 0%, #5d9148 100%)',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+      position: 'sticky',
+      top: 0,
+      zIndex: 1000
+    }}>
+      <style>{`
+        .nav-link {
+          color: rgba(255, 255, 255, 0.9);
+          text-decoration: none;
+          padding: 8px 16px;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 500;
+          transition: all 0.2s;
+          display: inline-block;
+        }
+        .nav-link:hover {
+          background: rgba(255, 255, 255, 0.15);
+          color: white;
+        }
+        .nav-brand {
+          color: white;
+          text-decoration: none;
+          font-size: 20px;
+          font-weight: 700;
+          padding: 8px 12px;
+          border-radius: 6px;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .nav-brand:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+        .nav-select {
+          padding: 8px 12px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 6px;
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          outline: none;
+          transition: all 0.2s;
+        }
+        .nav-select:hover {
+          background: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 255, 255, 0.4);
+        }
+        .nav-select option {
+          background: #4a7c3b;
+          color: white;
+        }
+        .nav-badge {
+          padding: 8px 16px;
+          background: rgba(255, 255, 255, 0.15);
+          color: white;
+          border-radius: 6px;
+          font-size: 13px;
+          font-weight: 600;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          text-decoration: none;
+          transition: all 0.2s;
+          display: inline-block;
+        }
+        .nav-badge:hover {
+          background: rgba(255, 255, 255, 0.25);
+          border-color: rgba(255, 255, 255, 0.3);
+        }
+        .nav-btn-secondary {
+          padding: 8px 16px;
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .nav-btn-secondary:hover {
+          background: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 255, 255, 0.4);
+        }
+        .nav-btn-primary {
+          padding: 8px 20px;
+          background: white;
+          color: #4a7c3b;
+          border: none;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          text-decoration: none;
+          display: inline-block;
+        }
+        .nav-btn-primary:hover {
+          background: #f0f0f0;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        @media (max-width: 968px) {
+          .nav-container {
+            flex-direction: column !important;
+            gap: 12px !important;
+            align-items: flex-start !important;
+          }
+          .nav-left, .nav-right {
+            flex-wrap: wrap;
+          }
+        }
+      `}</style>
 
-          {/* ✅ Buyer nav */}
-          {user?.role === 'BUYER' && <Link to="/buyer/orders">My Orders</Link>}
+      <div style={{
+        maxWidth: '1400px',
+        margin: '0 auto',
+        padding: '12px 24px'
+      }}>
+        <div className="nav-container" style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16
+        }}>
+          {/* Left side - Brand and Navigation */}
+          <div className="nav-left" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4
+          }}>
+            <Link to="/" className="nav-brand">
+              <span style={{ fontSize: '24px' }}>🌾</span>
+              {t('appName')}
+            </Link>
+            
+            <Link to="/market" className="nav-link">{t('marketplace')}</Link>
 
-          {/* ✅ Farmer nav */}
-          {user?.role === 'FARMER' && <Link to="/farmer">{t('dashboard')}</Link>}
-          {user?.role === 'FARMER' && <Link to="/farmer/orders">Customer Orders</Link>}
-          {user && <Link to="/price">AI Price</Link>}
+            {/* ✅ Buyer nav */}
+            {user?.role === 'BUYER' && <Link to="/buyer/orders" className="nav-link">My Orders</Link>}
 
-          {/* ✅ Admin nav */}
-          {user?.role === 'ADMIN' && <Link to="/admin">{t('admin')}</Link>}
+            {/* ✅ Farmer nav */}
+            {user?.role === 'FARMER' && <Link to="/farmer" className="nav-link">{t('dashboard')}</Link>}
+            {user?.role === 'FARMER' && <Link to="/farmer/orders" className="nav-link">Customer Orders</Link>}
+            {user && <Link to="/price" className="nav-link">AI Price</Link>}
 
-          {/* ✅ Common for logged-in users */}
-          {user && <Link to="/chat">{t('chat')}</Link>}
-        </div>
+            {/* ✅ Admin nav */}
+            {user?.role === 'ADMIN' && <Link to="/admin" className="nav-link">{t('admin')}</Link>}
 
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <select
-            className="input"
-            style={{ width: 140, padding: '8px 10px' }}
-            value={i18n.language}
-            onChange={(e)=>setLang(e.target.value)}
-          >
-            <option value="en">{t('english')}</option>
-            <option value="np">{t('nepali')}</option>
-          </select>
+            {/* ✅ Common for logged-in users */}
+            {user && <Link to="/chat" className="nav-link">{t('chat')}</Link>}
+          </div>
 
-          {user ? (
-            <>
-              <Link to="/profile" className="badge" style={{ background:'#ffffff22', color:'#fff' }}>
-                {user.fullName} • {user.role}
-              </Link>
-              <button className="btn secondary" onClick={onLogout}>{t('logout')}</button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="btn secondary">{t('login')}</Link>
-              <Link to="/register" className="btn primary">{t('register')}</Link>
-            </>
-          )}
+          {/* Right side - Language and Auth */}
+          <div className="nav-right" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10
+          }}>
+            <select
+              className="nav-select"
+              value={i18n.language}
+              onChange={(e) => setLang(e.target.value)}
+            >
+              <option value="en">{t('english')}</option>
+              <option value="np">{t('nepali')}</option>
+            </select>
+
+            {user ? (
+              <>
+                <Link to="/profile" className="nav-badge">
+                  {user.fullName} • {user.role}
+                </Link>
+                <button className="nav-btn-secondary" onClick={onLogout}>
+                  {t('logout')}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="nav-btn-secondary">
+                  {t('login')}
+                </Link>
+                <Link to="/register" className="nav-btn-primary">
+                  {t('register')}
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
