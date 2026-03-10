@@ -25,6 +25,11 @@ export default function Checkout() {
   const { user } = useAuth();
 
   const [cart, setCart] = useState([]);
+  
+  // ✅ NEW: Name and Phone states
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [district, setDistrict] = useState("");
   const [municipality, setMunicipality] = useState("");
@@ -43,6 +48,9 @@ export default function Checkout() {
     }
     setCart(Array.isArray(parsed) ? parsed : []);
 
+    // ✅ Auto-fill from user profile (including new fields)
+    setFullName(user?.fullName || "");
+    setPhone(user?.phone || "");
     setDeliveryAddress(user?.address || "");
     setDistrict(user?.district || "");
     setMunicipality(user?.municipality || "");
@@ -92,6 +100,9 @@ export default function Checkout() {
           cropId: it.cropId || it.id,
           quantity: Number(it.quantity || 1),
         })),
+        // ✅ Include name and phone in order
+        buyerName: fullName,
+        buyerPhone: phone,
         deliveryAddress,
         district,
         municipality,
@@ -200,6 +211,50 @@ export default function Checkout() {
               </div>
 
               <div style={{ display: "grid", gap: "16px" }}>
+                {/* ✅ NEW: Full Name Field */}
+                <div>
+                  <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#333", marginBottom: "8px" }}>
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  />
+                </div>
+
+                {/* ✅ NEW: Phone Number Field */}
+                <div>
+                  <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#333", marginBottom: "8px" }}>
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  />
+                </div>
+
                 <div>
                   <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#333", marginBottom: "8px" }}>
                     Delivery Address

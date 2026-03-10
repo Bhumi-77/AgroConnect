@@ -15,58 +15,147 @@ export default function Chat() {
   const [roomId, setRoomId] = useState(initialRoom);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
+  const [loadingMessages, setLoadingMessages] = useState(false);
 
   const sockRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   const loadRooms = async () => {
-    const { data } = await api.get('/api/chat/rooms');
-    if (data.ok) setRooms(data.rooms);
+    try {
+      const { data } = await api.get('/api/chat/rooms');
+      if (data.ok) {
+        setRooms(data.rooms);
+      }
+    } catch (error) {
+      console.error('❌ Failed to load rooms:', error);
+    }
   };
 
   const loadMessages = async (rid) => {
-    if (!rid) return setMessages([]);
-    const { data } = await api.get(`/api/chat/room/${rid}/messages`);
-    if (data.ok) setMessages(data.messages);
+    if (!rid) {
+      setMessages([]);
+      return;
+    }
+    
+    setLoadingMessages(true);
+    try {
+      console.log('📥 Loading messages for room:', rid);
+      const { data } = await api.get(`/api/chat/room/${rid}/messages`);
+      console.log('📦 Messages response:', data);
+      
+      if (data.ok) {
+        setMessages(data.messages || []);
+      } else {
+        console.error('❌ Failed to load messages:', data.error || data.message);
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error('❌ Error loading messages:', error);
+      console.error('Response:', error.response?.data);
+      setMessages([]);
+    } finally {
+      setLoadingMessages(false);
+    }
   };
 
-  useEffect(() => { loadRooms(); }, []);
-  useEffect(() => { if (roomId) loadMessages(roomId); }, [roomId]);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const sock = io(API_URL, { auth: { token } });
-    sockRef.current = sock;
-
-    sock.on('connect', () => {});
-    sock.on('newMessage', (msg) => {
-      if (msg.roomId === roomId) setMessages((m) => [...m, msg]);
-    });
-
-    return () => sock.close();
+  useEffect(() => { 
+    loadRooms(); 
+  }, []);
+  
+  useEffect(() => { 
+    if (roomId) {
+      console.log('✅ Room ID changed to:', roomId);
+      loadMessages(roomId);
+    }
   }, [roomId]);
 
   useEffect(() => {
-    if (!sockRef.current || !roomId) return;
+    const token = localStorage.getItem('token');
+    console.log('🔌 Initializing socket, token exists:', !!token);
+    
+    const sock = io(API_URL, { 
+      auth: { token },
+      transports: ['websocket', 'polling']
+    });
+    sockRef.current = sock;
+
+    sock.on('connect', () => {
+      console.log('✅ Socket connected! ID:', sock.id);
+    });
+    
+    sock.on('connect_error', (err) => {
+      console.error('❌ Socket connection error:', err.message);
+    });
+    
+    sock.on('newMessage', (msg) => {
+      console.log('📨 Received newMessage:', msg);
+      setMessages((prev) => {
+        // Avoid duplicates
+        const exists = prev.find(m => m.id === msg.id);
+        if (exists) {
+          console.log('⚠️ Message already exists, skipping');
+          return prev;
+        }
+        console.log('✅ Adding new message to state');
+        return [...prev, msg];
+      });
+    });
+
+    return () => {
+      console.log('🔌 Cleaning up socket');
+      sock.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!sockRef.current || !roomId) {
+      console.log('⚠️ Cannot join room - no socket or roomId:', { 
+        hasSocket: !!sockRef.current, 
+        roomId 
+      });
+      return;
+    }
+    
+    console.log('🚪 Joining room:', roomId);
     sockRef.current.emit('joinRoom', { roomId });
-    return () => sockRef.current?.emit('leaveRoom', { roomId });
+    
+    return () => {
+      console.log('🚪 Leaving room:', roomId);
+      sockRef.current?.emit('leaveRoom', { roomId });
+    };
   }, [roomId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const send = () => {
-    if (!text.trim() || !roomId) return;
-    sockRef.current.emit('sendMessage', { roomId, text: text.trim() });
+  const send = async () => {
+    if (!text.trim() || !roomId || !sockRef.current) {
+      console.log('❌ Cannot send message:', { 
+        hasText: !!text.trim(), 
+        hasRoomId: !!roomId, 
+        hasSocket: !!sockRef.current 
+      });
+      return;
+    }
+    
+    const messageData = { roomId, text: text.trim() };
+    console.log('📤 Sending message:', messageData);
+    
+    sockRef.current.emit('sendMessage', messageData);
     setText('');
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       send();
     }
+  };
+
+  const handleRoomClick = (rid) => {
+    console.log('👆 Room clicked:', rid);
+    setRoomId(rid);
   };
 
   const header = useMemo(() => {
@@ -80,10 +169,8 @@ export default function Chat() {
       minHeight: '100vh',
       background: '#f5f7fa',
       padding: '24px',
-      // ✅ important: give space for your NavBar
       paddingTop: '90px'
     }}>
-      {/* Responsive Styles */}
       <style>{`
         @media (max-width: 968px) {
           .chat-container {
@@ -104,49 +191,10 @@ export default function Chat() {
         }
       `}</style>
 
-      {/* ✅ Back bar (so user always has navigation even if NavBar is hidden) */}
-      <div style={{
-        maxWidth: '1400px',
-        margin: '0 auto 16px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <button
-          onClick={() => nav(-1)}
-          style={{
-            padding: '10px 14px',
-            background: 'white',
-            border: '1px solid #e0e0e0',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 600
-          }}
-        >
-          ← Back
-        </button>
-
-        <button
-          onClick={() => nav('/market')}
-          style={{
-            padding: '10px 14px',
-            background: '#4a7c3b',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 700
-          }}
-        >
-          Go to Marketplace
-        </button>
-      </div>
-
       <div className="chat-wrapper" style={{
         maxWidth: '1400px',
         margin: '0 auto'
       }}>
-        {/* Header */}
         <div style={{ marginBottom: '24px' }}>
           <h1 style={{
             fontSize: '32px',
@@ -166,14 +214,13 @@ export default function Chat() {
           </p>
         </div>
 
-        {/* Chat Container */}
         <div className="chat-container" style={{
           display: 'flex',
           gap: '20px',
           height: 'calc(100vh - 260px)',
           minHeight: '600px'
         }}>
-          {/* Sidebar - Chat List */}
+          {/* Sidebar */}
           <div className="chat-sidebar" style={{
             width: '360px',
             maxWidth: '360px',
@@ -219,31 +266,18 @@ export default function Chat() {
               borderRadius: '8px',
               marginBottom: '16px'
             }}>
-              <div style={{
-                fontSize: '13px',
-                color: '#666',
-                marginBottom: '4px'
-              }}>
+              <div style={{ fontSize: '13px', color: '#666', marginBottom: '4px' }}>
                 Logged in as
               </div>
-              <div style={{
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#1a1a1a'
-              }}>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a1a' }}>
                 {user?.fullName}
               </div>
-              <div style={{
-                fontSize: '12px',
-                color: '#4a7c3b',
-                fontWeight: '500',
-                marginTop: '2px'
-              }}>
+              <div style={{ fontSize: '12px', color: '#4a7c3b', fontWeight: '500', marginTop: '2px' }}>
                 {user?.role}
               </div>
             </div>
 
-            {/* Chat Rooms List */}
+            {/* Rooms List */}
             <div style={{
               flex: 1,
               overflowY: 'auto',
@@ -254,7 +288,7 @@ export default function Chat() {
               {rooms.map(r => (
                 <button
                   key={r.id}
-                  onClick={() => setRoomId(r.id)}
+                  onClick={() => handleRoomClick(r.id)}
                   style={{
                     background: roomId === r.id ? '#e8f5e9' : 'white',
                     border: roomId === r.id ? '2px solid #4a7c3b' : '1px solid #e0e0e0',
@@ -391,6 +425,16 @@ export default function Chat() {
                     </div>
                   </div>
                 </div>
+              ) : loadingMessages ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  color: '#666'
+                }}>
+                  Loading messages...
+                </div>
               ) : messages.length === 0 ? (
                 <div style={{
                   display: 'flex',
@@ -480,7 +524,7 @@ export default function Chat() {
                     type="text"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyDown}
                     placeholder="Type your message..."
                     style={{
                       flex: 1,
