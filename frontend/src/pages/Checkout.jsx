@@ -22,11 +22,11 @@ function postToEsewa(formUrl, fields) {
 
 export default function Checkout() {
   const nav = useNavigate();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
 
   const [cart, setCart] = useState([]);
   
-  // ✅ NEW: Name and Phone states
+  // ✅ Name and Phone states
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   
@@ -36,9 +36,16 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  
+  // ✅ NEW: Track if data has been loaded
+  const [dataLoaded, setDataLoaded] = useState(false);
 
-  // load cart + user defaults
+  // ✅ Fetch fresh user data and auto-fill form ONCE
   useEffect(() => {
+    // Prevent re-running if already loaded
+    if (dataLoaded) return;
+    
+    // Load cart
     let parsed = [];
     try {
       const raw = localStorage.getItem("cart");
@@ -48,13 +55,65 @@ export default function Checkout() {
     }
     setCart(Array.isArray(parsed) ? parsed : []);
 
-    // ✅ Auto-fill from user profile (including new fields)
-    setFullName(user?.fullName || "");
-    setPhone(user?.phone || "");
-    setDeliveryAddress(user?.address || "");
-    setDistrict(user?.district || "");
-    setMunicipality(user?.municipality || "");
-  }, [user]);
+    // ✅ Auto-fill from user context first
+    if (user) {
+      setFullName(user.fullName || "");
+      setPhone(user.phone || "");
+      setDeliveryAddress(user.address || "");
+      setDistrict(user.district || "");
+      setMunicipality(user.municipality || "");
+    }
+
+    // ✅ Fetch fresh user data from API to ensure latest info
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setDataLoaded(true);
+          return;
+        }
+        
+        const { data } = await api.get("/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (data.ok && data.user) {
+          const freshUser = data.user;
+          
+          // Update form fields with fresh data
+          setFullName(freshUser.fullName || "");
+          setPhone(freshUser.phone || "");
+          setDeliveryAddress(freshUser.address || "");
+          setDistrict(freshUser.district || "");
+          setMunicipality(freshUser.municipality || "");
+          
+          // Update auth context and localStorage
+          setUser(freshUser);
+          localStorage.setItem("user", JSON.stringify(freshUser));
+        }
+      } catch (error) {
+        console.log("Could not fetch fresh user data for checkout");
+        // Fallback: try localStorage
+        try {
+          const storedUser = JSON.parse(localStorage.getItem("user"));
+          if (storedUser) {
+            setFullName(storedUser.fullName || "");
+            setPhone(storedUser.phone || "");
+            setDeliveryAddress(storedUser.address || "");
+            setDistrict(storedUser.district || "");
+            setMunicipality(storedUser.municipality || "");
+          }
+        } catch {}
+      } finally {
+        // ✅ Mark data as loaded to prevent re-running
+        setDataLoaded(true);
+      }
+    };
+
+    fetchUserData();
+    
+    // ✅ Empty dependency array = run only once on mount
+  }, []); // Changed from [user, setUser] to []
 
   // ✅ persist helper
   const saveCart = (next) => {
@@ -65,7 +124,7 @@ export default function Checkout() {
   // ✅ remove single item
   const removeItem = (it) => {
     setErr("");
-    const key = it.cropId || it.id; // supports both
+    const key = it.cropId || it.id;
     const next = cart.filter((x) => (x.cropId || x.id) !== key);
     saveCart(next);
   };
@@ -211,7 +270,7 @@ export default function Checkout() {
               </div>
 
               <div style={{ display: "grid", gap: "16px" }}>
-                {/* ✅ NEW: Full Name Field */}
+                {/* ✅ Full Name Field - Now you can type! */}
                 <div>
                   <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#333", marginBottom: "8px" }}>
                     Full Name
@@ -233,7 +292,7 @@ export default function Checkout() {
                   />
                 </div>
 
-                {/* ✅ NEW: Phone Number Field */}
+                {/* ✅ Phone Number Field - Now you can type! */}
                 <div>
                   <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#333", marginBottom: "8px" }}>
                     Phone Number

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
@@ -25,6 +25,108 @@ function LocationPicker({ onLocationSelect }) {
   return null;
 }
 
+// ✅ Nepal Districts and Municipalities Data
+const nepalDistricts = [
+  'Achham', 'Arghakhanchi', 'Baglung', 'Baitadi', 'Bajhang', 'Bajura', 'Banke', 'Bara', 'Bardiya',
+  'Bhaktapur', 'Bhojpur', 'Chitwan', 'Dadeldhura', 'Dailekh', 'Dang', 'Darchula', 'Dhading',
+  'Dhankuta', 'Dhanusa', 'Dholkha', 'Dolpa', 'Doti', 'Gorkha', 'Gulmi', 'Humla', 'Ilam', 'Jajarkot',
+  'Jhapa', 'Jumla', 'Kailali', 'Kalikot', 'Kanchanpur', 'Kapilvastu', 'Kaski', 'Kathmandu',
+  'Kavrepalanchok', 'Khotang', 'Lalitpur', 'Lamjung', 'Mahottari', 'Makwanpur', 'Manang', 'Morang',
+  'Mugu', 'Mustang', 'Myagdi', 'Nawalparasi East', 'Nawalparasi West', 'Nuwakot', 'Okhaldhunga',
+  'Palpa', 'Panchthar', 'Parbat', 'Parsa', 'Pyuthan', 'Ramechhap', 'Rasuwa', 'Rautahat', 'Rolpa',
+  'Rukum East', 'Rukum West', 'Rupandehi', 'Salyan', 'Sankhuwasabha', 'Saptari', 'Sarlahi',
+  'Sindhuli', 'Sindhupalchok', 'Siraha', 'Solukhumbu', 'Sunsari', 'Surkhet', 'Syangja', 'Tanahu',
+  'Taplejung', 'Terhathum', 'Udayapur'
+].sort();
+
+// ✅ District to Municipalities Mapping (Major ones - expand as needed)
+const districtMunicipalities = {
+  'Achham':['Mangalsen Municipality','Panchadewal Binayak Municipality  ','Kamalbazar Municipality','Chaurpati Rural Municipality','Ramaroshan Rural Municipality','Mellekh Rural Municipality','Bannigadi Jayagad Rural Municipality'],
+  'Arghakhanchi': ['Sandhikharka Municipality', 'Sitganga Municipality', 'Chhatradev Rural Municipality', 'Malarani Rural Municipality', 'Panini Rural Municipality','Bhumikasthan Municipality'],
+  'Baglung': ['Baglung Municipality', 'Galkot Municipality', 'Dhorpatan Municipality', 'Tara Khola Rural Municipality', 'Nisikhola Rural Municipality', 'Bareng Rural Municipality', 'Jaimuni Rural Municipality'],
+  'Baitadi': ['Dasharathchand Municipality', 'Patan Municipality', 'Melauli Municipality', 'Pancheshwar Municipality', 'Shivanath Municipality', 'Surnaya Rural Municipality', 'Dilasaini Rural Municipality'],
+  'Bajhang': ['Chainpur Municipality', 'Jaya Prithvi Municipality', 'Bungal Municipality', 'Surma Rural Municipality', 'Talkot Rural Municipality', 'Masta Rural Municipality', 'Durgathali Rural Municipality'],
+  'Bajura': ['Budhiganga Municipality', 'Triveni Municipality', 'Swamikartik Khapar Rural Municipality', 'Himali Rural Municipality', 'Chhededaha Rural Municipality'],
+  'Banke': ['Nepalgunj Sub-Metropolitan', 'Kohalpur', 'Rapti Sonari', 'Narainapur', 'Duduwa', 'Janaki', 'Khajura', 'Baijanath'],
+  'Bara': ['Kalaiya Sub-Metropolitan', 'Parwanipur Municipality', 'Prasauni Municipality', 'Adarsh Kotwal Rural Municipality', 'Baragadhi Rural Municipality', 'Pacharauta Municipality'],  
+  'Bardiya': ['Gulariya Municipality', 'Madhuwan', 'Rajapur', 'Thakurbaba', 'Bansagadhi', 'Barbardiya', 'Geruwa', 'Badhaiyatal'],
+  'Bhaktapur': ['Bhaktapur Municipality', 'Changunarayan', 'Madhyapur Thimi', 'Suryabinayak'],
+  'Bhojpur': ['Bhojpur Municipality', 'Shadananda Municipality', 'Pauwadungma Rural Municipality', 'Aamchok Rural Municipality', 'Hatuwagadhi Rural Municipality', 'Salpasilichho Rural Municipality'],
+  'Chitwan': ['Bharatpur Metropolitan', 'Ratnanagar', 'Rapti', 'Kalika', 'Khairahani', 'Madi', 'Ichchhakamana'],
+  'Dadeldhura': ['Amargadhi Municipality', 'Parshuram Municipality', 'Alital Rural Municipality', 'Navadurga Rural Municipality', 'Ajaymeru Rural Municipality'],
+  'Dailekh': ['Dailekh Municipality', 'Bhagawatimai Rural Municipality', 'Dullu Municipality', 'Gurans Rural Municipality', 'Naumule Rural Municipality', 'Aathbis Rural Municipality', 'Bheri Malika Rural Municipality'],
+  'Dang': ['Ghorahi Sub-Metropolitan', 'Tulsipur Sub-Metropolitan', 'Lamahi', 'Gadhawa', 'Rajpur', 'Shantinagar', 'Rapti', 'Dangisharan', 'Babai', 'Banglachuli'],
+  'Darchula': ['Mahakali Municipality', 'Shailyashikhar Municipality', 'Malikarjun Rural Municipality', 'Apihimal Rural Municipality', 'Duhun Rural Municipality'],
+  'Dhading': ['Dhading Municipality', 'Gajuri Municipality', 'Galchhi Rural Municipality', 'Thakre Rural Municipality', 'Benighat Rorang Rural Municipality', 'Netrawati Dabjong Rural Municipality'],
+  'Dhankuta': ['Dhankuta Municipality', 'Mahalaxmi Municipality', 'Pakhribas Municipality', 'Chhathar Rural Municipality', 'Sangurigadhi Rural Municipality', 'Chaubise Rural Municipality'],
+  'Dhanusa': ['Janakpur Sub-Metropolitan', 'Bateshwar Rural Municipality', 'Mithila Bihari Municipality', 'Mithila Madhya Municipality', 'Mithila Thakurani Municipality', 'Nagarain Municipality', 'Dhanusadham Municipality'],
+  'Dholkha': ['Dhulikhel Municipality', 'Namobuddha Municipality', 'Panauti Municipality', 'Kalinchowk Rural Municipality', 'Jugal Rural Municipality'],
+  'Dolpa': ['Thuli Bheri Municipality', 'Dolpo Buddha Rural Municipality', 'She Phoksundo Rural Municipality', 'Saldang Rural Municipality'],
+  'Doti': ['Dipayal Silgadhi Sub-Metropolitan', 'Jorayal Rural Municipality', 'Sayal Rural Municipality', 'Malaun Rural Municipality', 'Aadarsha Rural Municipality', 'Shikhar Rural Municipality'],
+  'Gorkha': ['Gorkha Municipality', 'Palungtar Municipality', 'Sulikot Rural Municipality', 'Siranchok Rural Municipality', 'Ajirkot Rural Municipality', 'Barpak Sulikot Rural Municipality'], 
+  'Gulmi': ['Resunga Municipality', 'Madane Rural Municipality', 'Malika Rural Municipality', 'Dhuri Rural Municipality', 'Isma Rural Municipality', 'Kaligandaki Rural Municipality', 'Satyawati Rural Municipality'],
+  'Humla': ['Simkot Rural Municipality', 'Chankheli Rural Municipality', 'Kharpunath Rural Municipality', 'Adanchuli Rural Municipality', 'Tajakot Rural Municipality'],
+  'Ilam': ['Ilam Municipality', 'Chulachuli Rural Municipality', 'Maijogmai Rural Municipality', 'Suryodaya Municipality', 'Mangsebung Rural Municipality', 'Rong Rural Municipality'],
+  'Jajarkot': ['Jajarkot Municipality', 'Bheri Municipality', 'Chhedagad Municipality', 'Kankalpur Rural Municipality', 'Shivraj Rural Municipality', 'Keheli Rural Municipality'],
+  'Jhapa': ['Mechinagar', 'Damak', 'Kankai', 'Bhadrapur', 'Arjundhara', 'Shivasatakshi', 'Gauradaha', 'Birtamod', 'Kamal', 'Gaurigunj', 'Barhadashi', 'Jhapa', 'Buddhashanti', 'Haldibari', 'Kachankawal'],
+  'Jumla': ['Jumla Municipality', 'Sinja Rural Municipality', 'Hima Rural Municipality', 'Tila Rural Municipality', 'Guthichaur Rural Municipality'],
+  'Kailali': ['Dhangadhi Sub-Metropolitan', 'Tikapur', 'Ghodaghodi', 'Bhajani', 'Godawari', 'Gauriganga', 'Janaki', 'Bardagoriya', 'Mohanyal', 'Kailari', 'Joshipur', 'Lamkichuha', 'Chure'],
+  'Kalikot': ['Khandachakra Municipality', 'Tilagufa Municipality', 'Shubha Kalika Municipality', 'Pachaljharana Rural Municipality', 'Raskot Rural Municipality', 'Sanni Triveni Rural Municipality'],
+  'Kanchanpur': ['Bhimdatta', 'Punarbas', 'Bedkot', 'Mahakali', 'Shuklaphanta', 'Belauri', 'Krishnapur', 'Laljhadi'],
+  'Kapilvastu': ['Kapilvastu Municipality', 'Shivaraj Municipality', 'Maharajgunj Municipality', 'Mayadevi Rural Municipality', 'Yasodhara Rural Municipality', 'Suddhodhan Rural Municipality'],
+  'Kaski': ['Pokhara Metropolitan', 'Annapurna', 'Machhapuchchhre', 'Madi', 'Rupa'],
+  'Kavrepalanchok': ['Dhulikhel Municipality', 'Banepa Municipality', 'Panauti Municipality', 'Mandandeupur Municipality', 'Bhumlu Rural Municipality', 'Bethanchok Rural Municipality', 'Chaurideurali Rural Municipality'],
+  'Khotang': ['Diktel Rupakot Majhuwagadhi Municipality', 'Halesi Tuwachung Municipality', 'Aiselukharka Rural Municipality', 'Khotehang Rural Municipality', 'Rupatar Rural Municipality', 'Sakela Rural Municipality'],
+  'Kathmandu': ['Kathmandu Metropolitan', 'Kageshwari Manohara', 'Kirtipur', 'Gokarneshwor', 'Chandragiri', 'Tokha', 'Tarakeshwor', 'Dakshinkali', 'Nagarjun', 'Budhanilkantha', 'Shankharapur'],
+  'Lalitpur': ['Lalitpur Metropolitan', 'Godawari', 'Mahalaxmi', 'Konjyosom', 'Bagmati', 'Mahankal'],
+  'Lamjung': ['Besisahar Municipality', 'Marsyandi Rural Municipality', 'Madhyanepal Municipality', 'Dordi Rural Municipality', 'Sundarbazar Municipality', 'Rainas Municipality', 'Dudhpokhari Rural Municipality'],
+  'Mahottari': ['Jaleshwar Sub-Metropolitan', 'Manara Shiswa Municipality', 'Matihani Municipality', 'Bardibas Municipality', 'Gaushala Municipality', 'Balawa Municipality', 'Pipara Rural Municipality'],
+  'Makwanpur': ['Hetauda Sub-Metropolitan', 'Thaha Municipality', 'Indrasarowar Rural Municipality', 'Manahari Rural Municipality', 'Raksirang Rural Municipality', 'Bagmati Rural Municipality', 'Bakaiya Rural Municipality'],
+  'Manang': ['Chame Rural Municipality', 'Nason Rural Municipality', 'Narpa Bhumi Rural Municipality', 'Bhraka Rural Municipality'],
+  'Mugu': ['Mugu Municipality', 'Chhayanath Rara Rural Municipality', 'Soru Rural Municipality', 'Khatyad Rural Municipality', 'Ehram Rural Municipality'],
+  'Mustang': ['Jomsom Municipality', 'Lo Manthang Rural Municipality', 'Muktinath Rural Municipality', 'Gharpajhong Rural Municipality'],
+  'Morang': ['Biratnagar Metropolitan', 'Belbari', 'Dhanpalthan', 'Gramthan', 'Jahada', 'Kanepokhari', 'Katahari', 'Kerabari', 'Letang', 'Miklajung', 'Pathari-Sanischare', 'Rangeli', 'Ratuwamai', 'Sunawarshi', 'Sunwarshi', 'Urlabari'],
+  'Myagdi': ['Beni Municipality', 'Mangala Rural Municipality', 'Malika Rural Municipality', 'Raghuganga Rural Municipality', 'Dhawalagiri Rural Municipality'],
+  'Nawalparasi East': ['Bardaghat Municipality', 'Parasi Municipality', 'Susta Rural Municipality', 'Sarawal Rural Municipality', 'Pratappur Rural Municipality'],
+  'Nawalparasi West': ['Sunwal Municipality', 'Ramgram Municipality', 'Palhinandan Rural Municipality', 'Pratappur Rural Municipality', 'Susta Rural Municipality'],
+  'Nuwakot': ['Bidur Municipality', 'Belkotgadhi Municipality', 'Kakani Rural Municipality', 'Trishuli Rural Municipality', 'Nuwakot Rural Municipality', 'Shivapuri Rural Municipality'],
+  'Okhaldhunga': ['Siddhicharan Municipality', 'Chishankhugadhi Rural Municipality', 'Khijidemba Rural Municipality', 'Champadevi Rural Municipality', 'Shahidbhumi Rural Municipality'],
+  'Palpa': ['Tansen Municipality', 'Rambha Municipality', 'Rainadevi Chhahara Rural Municipality', 'Nisdi Rural Municipality', 'Purbakhola Rural Municipality', 'Jaljala Rural Municipality'],
+  'Panchthar': ['Phidim Municipality', 'Hilihang Rural Municipality', 'Kummayak Rural Municipality', 'Miklajung Rural Municipality', 'Phedap Rural Municipality', 'Tumbewa Rural Municipality'],
+  'Parbat': ['Kushma Municipality', 'Phalewas Municipality', 'Jaljala Rural Municipality', 'Paiyun Rural Municipality', 'Mahashila Rural Municipality'],
+  'Parsa': ['Birgunj Sub-Metropolitan', 'Pokhariya Municipality', 'Bahudarmai Municipality', 'Bindabasini Rural Municipality', 'Chhipaharmai Rural Municipality', 'Jagarnathpur Rural Municipality', 'Kalikamai Rural Municipality'],
+  'Pyuthan': ['Pyuthan Municipality', 'Gaumukhi Rural Municipality', 'Mandavi Rural Municipality', 'Naubahini Rural Municipality', 'Sarumarani Rural Municipality', 'Sworgadwari Rural Municipality'],
+  'Ramechhap': ['Manthali Municipality', 'Ramechhap Municipality', 'Sunapati Rural Municipality', 'Umakunda Rural Municipality', 'Gokulganga Rural Municipality'],
+  'Rasuwa': ['Dhunche Municipality', 'Briddhim Rural Municipality', 'Gosaikunda Rural Municipality', 'Kalika Rural Municipality', 'Naukunda Rural Municipality'],
+  'Rautahat': ['Gaur Municipality', 'Paroha Municipality', 'Ishnath Municipality', 'Rajdevi Municipality', 'Garuda Municipality', 'Maulapur Municipality', 'Durga Bhagwati Rural Municipality', 'Yamunamai Rural Municipality', 'Gadhimai Rural Municipality'],
+  'Rolpa': ['Rolpa Municipality', 'Madi Municipality', 'Runtigadhi Rural Municipality', 'Sunchhahari Rural Municipality', 'Thawang Rural Municipality', 'Tribeni Rural Municipality'],
+  'Rukum East': ['Rukumkot Municipality', 'Alae Rural Municipality', 'Sani Bheri Rural Municipality', 'Tribeni Rural Municipality', 'Putha Uttarganga Rural Municipality'],
+  'Rukum West': ['Musikot Municipality', 'Banphikot Rural Municipality', 'Mugum Karmarong Rural Municipality', 'Sani Martadi Rural Municipality', 'Alae Rural Municipality'],
+  'Rupandehi': ['Bharatpur Metropolitan', 'Butwal Sub-Metropolitan', 'Devdaha Municipality', 'Kanchan Rural Municipality', 'Lumbini Sanskritik Municipality', 'Sainamaina Municipality', 'Siddharthanagar Municipality', 'Tilottama Municipality'],
+  'Salyan': ['Salyan Municipality', 'Bagchaur Municipality', 'Sharada Municipality', 'Kapurkot Rural Municipality', 'Darma Rural Municipality', 'Tribeni Rural Municipality', 'Shirsha Rural Municipality'],
+  'Sankhuwasabha': ['Khandbari Municipality', 'Chainpur Municipality', 'Dharan Sub-Metropolitan', 'Bhotkhola Rural Municipality', 'Madi Rural Municipality', 'Panchkhapan Rural Municipality', 'Savapokhari Rural Municipality', 'Silichong Rural Municipality'],
+  'Saptari': ['Rajbiraj Sub-Metropolitan', 'Kanchanrup Municipality', 'Hanumannagar Kankalini Municipality', 'Saptakoshi Municipality', 'Tilathi Koiladi Rural Municipality', 'Bodebarsain Municipality', 'Khadak Municipality', 'Shambhunath Municipality', 'Surunga Municipality'],
+  'Sarlahi': ['Malangwa Municipality', 'Haripur Municipality', 'Barahathwa Municipality', 'Kabilasi Municipality', 'Basbariya Rural Municipality', 'Bishnu Rural Municipality', 'Lalbandi Municipality', 'Parsa Rural Municipality', 'Shivpuri Rural Municipality'],
+  'Sindhuli': ['Kamalamai Municipality', 'Sunkoshi Rural Municipality', 'Golanjor Rural Municipality', 'Marin Rural Municipality', 'Ghyanglekh Rural Municipality', 'Hariharpurgadhi Rural Municipality'],
+  'Sindhupalchok': ['Chautara Sangachokgadhi Municipality', 'Bhotekoshi Rural Municipality', 'Barhabise Municipality', 'Indrawati Rural Municipality', 'Jugal Rural Municipality', 'Helambu Rural Municipality', 'Lisankhu Pakhar Rural Municipality', 'Sunkoshi Rural Municipality'],
+  'Siraha': ['Lahan Municipality', 'Dhangadhimai Municipality', 'Golbazar Municipality', 'Mirchaiya Municipality', 'Sakhuwanankarkatti Rural Municipality', 'Arnama Rural Municipality', 'Kalyanpur Rural Municipality', 'Aurahi Rural Municipality'],
+  'Solukhumbu': ['Solu Dudhkunda Municipality', 'Nechasalyan Rural Municipality', 'Khumbu Pasanglhamu Rural Municipality', 'Mahalaxmi Rural Municipality', 'Thulung Dudhkoshi Rural Municipality'],
+  'Sunsari': ['Dharan Sub-Metropolitan', 'Inaruwa', 'Duhabi', 'Itahari Sub-Metropolitan', 'Ramdhuni', 'Barahachhetra', 'Koshi', 'Gadhi', 'Barju', 'Bhokraha Narsingh', 'Harinagara', 'Dewanganj'],
+  'Surkhet': ['Birendranagar Municipality', 'Bheriganga', 'Gurbhakot', 'Panchapuri', 'Lekbeshi', 'Chaukune', 'Barahatal', 'Chingad', 'Simta'],
+  'Syangja': ['Putalibazar Municipality', 'Waling Municipality', 'Phedikhola Rural Municipality', 'Aandhikhola Rural Municipality', 'Arjunchaupari Rural Municipality', 'Chapakot Rural Municipality', 'Harinas Rural Municipality'],
+  'Tanahu': ['Damauli Municipality', 'Byas Municipality', 'Shuklagandaki Municipality', 'Bhanu Municipality', 'Myagde Rural Municipality', 'Rishing Rural Municipality', 'Ghiring Rural Municipality'],
+  'Taplejung': ['Phungling Municipality', 'Mikwakhola Rural Municipality', 'Sidingwa Rural Municipality', 'Meringden Rural Municipality', 'Aathrai Rural Municipality', 'Pathibhara Yangwarak Rural Municipality'],
+  'Terhathum': ['Myanglung Municipality', 'Phedap Rural Municipality', 'Menchayam Rural Municipality', 'Aiselukharka Rural Municipality', 'Laligurans Rural Municipality'],
+  'Udayapur': ['Gaighat Municipality', 'Belaka Municipality', 'Chaudandigadhi Municipality', 'Katari Municipality', 'Rautamai Rural Municipality', 'Sunkoshi Rural Municipality', 'Tapli Rural Municipality', 'Limchungbung Rural Municipality'],
+  // Add more districts as needed...
+  // For districts not listed, show a generic message or empty array
+};
+
+// Helper to get municipalities for a district
+const getMunicipalities = (district) => {
+  return districtMunicipalities[district] || [];
+};
+
 export default function Register() {
   const { t } = useTranslation();
   const { setUser } = useAuth();
@@ -45,6 +147,17 @@ export default function Register() {
   
   const [mapPosition, setMapPosition] = useState([28.3949, 84.1240]); // Default to Nepal
   const [err, setErr] = useState('');
+
+  // ✅ Filter municipalities when district changes
+  const municipalities = useMemo(() => {
+    return getMunicipalities(district);
+  }, [district]);
+
+  // Reset municipality when district changes
+  const handleDistrictChange = (e) => {
+    setDistrict(e.target.value);
+    setMunicipality(''); // Reset municipality when district changes
+  };
 
   const handleLocationSelect = (latlng) => {
     setLatitude(latlng.lat);
@@ -182,6 +295,26 @@ export default function Register() {
           font-family: monospace;
           color: #4a7c3b;
           font-size: 12px;
+        }
+        /* Dropdown styles */
+        select {
+          width: 100%;
+          padding: 12px 16px;
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+          fontSize: 14px;
+          outline: none;
+          transition: border 0.2s;
+          box-sizing: border-box;
+          background: white;
+          cursor: pointer;
+        }
+        select:focus {
+          border-color: #4a7c3b;
+        }
+        select:disabled {
+          background: #f5f5f5;
+          cursor: not-allowed;
         }
       `}</style>
 
@@ -570,72 +703,60 @@ export default function Register() {
               />
             </div>
 
-            <div className="form-row" style={{
-              display: 'flex',
-              gap: '16px',
-              marginBottom: '20px'
-            }}>
-              <div style={{ flex: 1 }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: '#333',
-                  marginBottom: '8px'
-                }}>
-                  {t('district')}
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter your district"
-                  value={district}
-                  onChange={e => setDistrict(e.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    outline: 'none',
-                    transition: 'border 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#4a7c3b'}
-                  onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
-                />
-              </div>
+            {/* ✅ District Dropdown */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#333',
+                marginBottom: '8px'
+              }}>
+                {t('district')}
+              </label>
+              <select
+                value={district}
+                onChange={handleDistrictChange}
+                required
+              >
+                <option value="">Select District</option>
+                {nepalDistricts.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
 
-              <div style={{ flex: 1 }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: '#333',
-                  marginBottom: '8px'
-                }}>
-                  {t('municipality')}
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter your municipality"
-                  value={municipality}
-                  onChange={e => setMunicipality(e.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    outline: 'none',
-                    transition: 'border 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#4a7c3b'}
-                  onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
-                />
-              </div>
+            {/* ✅ Municipality Dropdown (filtered by district) */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#333',
+                marginBottom: '8px'
+              }}>
+                {t('municipality')}
+              </label>
+              <select
+                value={municipality}
+                onChange={(e) => setMunicipality(e.target.value)}
+                required
+                disabled={!district || municipalities.length === 0}
+              >
+                <option value="">
+                  {!district ? 'Select District First' : 
+                   municipalities.length === 0 ? 'Municipalities not available' : 
+                   'Select Municipality'}
+                </option>
+                {municipalities.map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+              {district && municipalities.length === 0 && (
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  💡 Type municipality manually if not listed
+                </p>
+              )}
             </div>
 
             {/* ✅ Map Integration Section */}
