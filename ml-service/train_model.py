@@ -124,11 +124,11 @@ def main():
     model.fit(X_train, y_train)
     joblib.dump(model, MODEL_PATH)
 
-    print("✅ Trained and saved:", MODEL_PATH)
-    print("✅ Separator used:", used_sep)
-    print("✅ Rows used:", len(df))
-    print("✅ Columns:", list(df.columns))
-    print("✅ Target:", target)
+    print(" Trained and saved:", MODEL_PATH)
+    print(" Separator used:", used_sep)
+    print(" Rows used:", len(df))
+    print(" Columns:", list(df.columns))
+    print(" Target:", target)
 
 if __name__ == "__main__":
     main()

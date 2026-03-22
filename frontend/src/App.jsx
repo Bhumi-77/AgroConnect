@@ -19,6 +19,9 @@ import AddCrop from './pages/farmer/AddCrop.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import Chat from './pages/Chat.jsx';
 import Profile from './pages/Profile.jsx';
+import Failure from "./components/Failure";
+import PaymentComponent from "./components/Payment";
+import Success from "./components/Success";
 
 // ✅ ADD THIS import (adjust path/name to match your file)
 import EditCrop from './pages/farmer/EditCrop.jsx';
@@ -273,8 +276,9 @@ export default function App() {
         <Route path="/chat" element={<Protected roles={['BUYER','FARMER','ADMIN']}><Chat /></Protected>} />
         <Route path="/profile" element={<Protected roles={['BUYER','FARMER','ADMIN']}><Profile /></Protected>} />
 
-        <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/payment/failure" element={<PaymentFailure />} />
+       < Route path="/" element={<PaymentComponent />} />
+            <Route path="/payment-success" element={<Success />} />
+            <Route path="/payment-failure" element={<Failure />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

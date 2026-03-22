@@ -9,7 +9,7 @@ from pathlib import Path
 
 app = FastAPI()
 
-# ✅ allow frontend/backend to call ML service
+# allow frontend/backend to call ML service
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

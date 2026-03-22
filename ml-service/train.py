@@ -7,8 +7,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestRegressor
 import joblib
 
-# You will export data from DB into this csv initially:
-# columns: cropName, district, date, price
+
 DATA_PATH = "data.csv"
 
 df = pd.read_csv(DATA_PATH)
@@ -42,4 +41,4 @@ pipe = Pipeline(steps=[("pre", pre), ("model", model)])
 pipe.fit(X, y)
 
 joblib.dump(pipe, "model.joblib")
-print("✅ Saved model.joblib")
+print(" Saved model.joblib")

@@ -8,7 +8,6 @@ import { Server as SocketIOServer } from "socket.io";
 import { PrismaClient } from "@prisma/client";
 import path from "path";
 import { fileURLToPath } from "url";
-
 import paymentEsewaRoutes from "./routes/paymentEsewa.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
@@ -90,7 +89,6 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/price", priceRoutes);
-
 app.use("/api/payments", paymentEsewaRoutes);
 
 app.use(notFound);

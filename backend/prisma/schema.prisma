@@ -209,3 +209,19 @@ model PricePrediction {
 
   @@index([cropName, district, createdAt])
 }
+
+enum TransactionStatus {
+  PENDING
+  COMPLETE
+  FAILED
+  REFUNDED
+}
+
+model EsewaTransaction {
+  id        String            @id @default(cuid())
+  productId String            @unique
+  amount    Float
+  status    TransactionStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
