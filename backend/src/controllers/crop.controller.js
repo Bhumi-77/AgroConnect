@@ -129,12 +129,15 @@ export const createCrop = async (req, res, next) => {
       district, municipality, latitude, longitude
     } = req.body;
 
-    // Validation
-    if (!titleEn || !titleNp || !category || !unit || !price || quantity === undefined) {
-      return res.status(400).json({ ok: false, error: 'Missing required fields' });
-    }
+    // Detailed validation
+    if (!titleEn) return res.status(400).json({ ok: false, error: 'Crop name in English is required' });
+    if (!titleNp) return res.status(400).json({ ok: false, error: 'Crop name in Nepali is required' });
+    if (!category) return res.status(400).json({ ok: false, error: 'Category is required' });
+    if (!unit) return res.status(400).json({ ok: false, error: 'Unit is required' });
+    if (!price || Number(price) <= 0) return res.status(400).json({ ok: false, error: 'Price must be greater than 0' });
+    if (quantity === undefined || quantity === null || Number(quantity) <= 0) return res.status(400).json({ ok: false, error: 'Quantity must be greater than 0' });
 
-    const qty = Number(quantity || 0);
+    const qty = Number(quantity);
 
     const crop = await prisma.crop.create({
       data: {

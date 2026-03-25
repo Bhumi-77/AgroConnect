@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
 
-// ✅ Nepal Districts → Municipalities map
+// ── Nepal Districts → Municipalities ──
 const NEPAL_DATA = {
   "Achham": ["Mangalsen Municipality","Sanphebagar Municipality","Bannigadhi Jayagadh Rural Municipality","Chaurpati Rural Municipality","Dhakari Rural Municipality","Mellekh Rural Municipality","Panchadeval Binayak Municipality","Ramaroshan Rural Municipality","Turmakhad Rural Municipality"],
   "Arghakanchi": ["Sandhikharka Municipality","Bhumekasthan Municipality","Malarani Rural Municipality","Chhatradev Rural Municipality","Panini Rural Municipality","Shitatganga Rural Municipality"],
@@ -81,6 +81,239 @@ const NEPAL_DATA = {
   "Udayapur": ["Triyuga Municipality","Belaka Municipality","Chaudandigadhi Municipality","Katari Municipality","Udayapurgadhi Rural Municipality","Tapli Rural Municipality","Rautamai Rural Municipality","Limchungbung Rural Municipality"],
 };
 
+
+// ── Scroll Reveal ──
+function Reveal({ children, delay = 0, direction = 'up' }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.1 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  const transforms = { up: 'translateY(32px)', left: 'translateX(-24px)', right: 'translateX(24px)' };
+  return (
+    <div ref={ref} style={{
+      opacity: visible ? 1 : 0,
+      transform: visible ? 'none' : transforms[direction],
+      transition: `opacity 0.6s ease ${delay}ms, transform 0.6s cubic-bezier(.22,1,.36,1) ${delay}ms`,
+    }}>{children}</div>
+  );
+}
+
+// ── Category pill data ──
+const CATEGORIES = [
+  { value: '', label: 'All', icon: '🌿' },
+  { value: 'vegetables', label: 'Vegetables', icon: '🥬' },
+  { value: 'fruits', label: 'Fruits', icon: '🍎' },
+  { value: 'grains', label: 'Grains', icon: '🌾' },
+  { value: 'other', label: 'Other', icon: '🪴' },
+];
+
+const CATEGORY_COLORS = {
+  vegetables: { bg: '#e8f5e9', color: '#2d5a1b' },
+  fruits:     { bg: '#fff3e0', color: '#b45309' },
+  grains:     { bg: '#fef9c3', color: '#92400e' },
+  other:      { bg: '#f3e8ff', color: '#6b21a8' },
+  default:    { bg: '#f0f4f0', color: '#4a7c3b' },
+};
+
+// ── Crop Card ──
+function CropCard({ c, titleKey, BACKEND_URL, user, onOrder, index }) {
+  const [hovered, setHovered] = useState(false);
+  const [imgErr, setImgErr] = useState(false);
+
+  const availableQty = c.availableQty ?? c.inventory?.available ?? c.quantity ?? 0;
+  const inStock = c.inStock ?? availableQty > 0;
+
+  // Robust image extraction
+  const rawImages = c.images;
+  let firstImage = null;
+  if (Array.isArray(rawImages) && rawImages.length > 0) {
+    firstImage = rawImages[0];
+  } else if (typeof rawImages === 'string' && rawImages.trim()) {
+    const s = rawImages.trim();
+    if (s.startsWith('[')) { try { const a = JSON.parse(s); if (a.length) firstImage = a[0]; } catch {} }
+    if (!firstImage && s.includes(',')) firstImage = s.split(',')[0].trim();
+    if (!firstImage) firstImage = s;
+  }
+  const imageUrl = firstImage
+    ? firstImage.startsWith('http') ? firstImage : `${BACKEND_URL}${firstImage.startsWith('/') ? '' : '/'}${firstImage}`
+    : null;
+
+  const cat = c.category?.toLowerCase() || 'default';
+  const catStyle = CATEGORY_COLORS[cat] || CATEGORY_COLORS.default;
+
+  return (
+    <Reveal delay={index * 60} direction="up">
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          background: 'white',
+          borderRadius: 20,
+          overflow: 'hidden',
+          border: `1.5px solid ${hovered ? '#a8d59a' : '#e4ece2'}`,
+          boxShadow: hovered ? '0 20px 48px rgba(74,124,59,0.14)' : '0 2px 12px rgba(0,0,0,0.05)',
+          transition: 'all 0.35s cubic-bezier(.22,1,.36,1)',
+          transform: hovered ? 'translateY(-6px)' : 'none',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* Image */}
+        <div style={{
+          width: '100%', height: 200,
+          background: 'linear-gradient(135deg, #e8f0e4 0%, #d4e8cc 100%)',
+          position: 'relative', overflow: 'hidden', flexShrink: 0,
+        }}>
+          {imageUrl && !imgErr ? (
+            <img src={imageUrl} alt={c[titleKey]}
+              onError={() => setImgErr(true)}
+              style={{
+                width: '100%', height: '100%', objectFit: 'cover',
+                transition: 'transform 0.5s cubic-bezier(.22,1,.36,1)',
+                transform: hovered ? 'scale(1.07)' : 'scale(1)',
+              }}
+            />
+          ) : (
+            <div style={{
+              width: '100%', height: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 64, opacity: 0.4,
+            }}>
+              {cat === 'vegetables' ? '🥬' : cat === 'fruits' ? '🍎' : cat === 'grains' ? '🌾' : '🌿'}
+            </div>
+          )}
+
+          {/* Out-of-stock overlay */}
+          {!inStock && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'rgba(0,0,0,0.42)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <span style={{
+                background: '#991b1b', color: 'white',
+                padding: '6px 16px', borderRadius: 30,
+                fontSize: 13, fontWeight: 700, letterSpacing: '0.06em',
+              }}>OUT OF STOCK</span>
+            </div>
+          )}
+
+          {/* Verified badge */}
+          {c.farmer?.isVerified && (
+            <div style={{
+              position: 'absolute', top: 12, right: 12,
+              background: 'rgba(255,255,255,0.92)',
+              backdropFilter: 'blur(6px)',
+              borderRadius: 20, padding: '4px 10px',
+              fontSize: 12, fontWeight: 700, color: '#1e40af',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>✓ Verified</div>
+          )}
+
+          {/* Category pill */}
+          <div style={{
+            position: 'absolute', top: 12, left: 12,
+            background: catStyle.bg,
+            borderRadius: 20, padding: '4px 12px',
+            fontSize: 12, fontWeight: 600, color: catStyle.color,
+          }}>{c.category}</div>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: '20px 22px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Title & location */}
+          <div>
+            <h3 style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 20, fontWeight: 700, color: '#1c2e0f',
+              margin: '0 0 6px', lineHeight: 1.3,
+            }}>{c[titleKey]}</h3>
+            <div style={{ fontSize: 13, color: '#7a8c6e', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span>📍</span>
+              <span>{[c.district, c.municipality].filter(Boolean).join(', ') || '—'}</span>
+            </div>
+          </div>
+
+          {/* Price + qty */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 22, fontWeight: 900, color: '#2d5a1b',
+            }}>रु {c.price}<span style={{ fontSize: 13, fontWeight: 500, color: '#7a8c6e' }}>/{c.unit}</span></span>
+            <span style={{
+              background: '#f0f7ee', color: '#4a7c3b',
+              borderRadius: 20, padding: '3px 12px',
+              fontSize: 12, fontWeight: 600,
+            }}>Qty: {availableQty}</span>
+          </div>
+
+          {/* Farmer */}
+          {c.farmer && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%',
+                background: 'linear-gradient(135deg, #4a7c3b, #8bc34a)',
+                color: 'white', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0,
+              }}>{c.farmer.fullName?.[0]?.toUpperCase() || 'F'}</div>
+              <span style={{ fontSize: 13, color: '#5a6b51' }}>by {c.farmer.fullName || 'Farmer'}</span>
+            </div>
+          )}
+
+          {/* Spacer */}
+          <div style={{ flex: 1 }} />
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
+            <Link to={`/product/${c.id}`} style={{
+              flex: 1, textAlign: 'center',
+              padding: '10px 0',
+              border: '1.5px solid #4a7c3b',
+              borderRadius: 40, fontSize: 13, fontWeight: 600,
+              color: '#4a7c3b', textDecoration: 'none',
+              background: 'white',
+              transition: 'all 0.2s',
+            }}
+            onMouseOver={e => { e.currentTarget.style.background = '#f0faf0'; }}
+            onMouseOut={e => { e.currentTarget.style.background = 'white'; }}
+            >View Details</Link>
+
+            {user?.role === 'BUYER' && (
+              inStock ? (
+                <button onClick={() => onOrder(c)} style={{
+                  flex: 1,
+                  padding: '10px 0',
+                  background: 'linear-gradient(135deg, #4a7c3b, #6b9c5a)',
+                  color: 'white', border: 'none',
+                  borderRadius: 40, fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', transition: 'all 0.2s',
+                  boxShadow: '0 4px 12px rgba(74,124,59,0.3)',
+                }}
+                onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(74,124,59,0.4)'; }}
+                onMouseOut={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(74,124,59,0.3)'; }}
+                >🛒 Order</button>
+              ) : (
+                <div style={{
+                  flex: 1, padding: '10px 0', textAlign: 'center',
+                  background: '#f3f4f6', color: '#9ca3af',
+                  borderRadius: 40, fontSize: 13, fontWeight: 600,
+                  cursor: 'not-allowed',
+                }}>Unavailable</div>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
+// ══════════════════════════════════════
+//   MAIN MARKETPLACE
+// ══════════════════════════════════════
 export default function Marketplace() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
@@ -91,838 +324,406 @@ export default function Marketplace() {
   const [category, setCategory] = useState('');
   const [district, setDistrict] = useState('');
   const [municipality, setMunicipality] = useState('');
+  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // ✅ Backend URL for showing images
   const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-
-  // ✅ Derived from NEPAL_DATA
   const sortedDistricts = Object.keys(NEPAL_DATA).sort();
   const availableMunicipalities = district ? NEPAL_DATA[district] || [] : [];
 
   const fetchCrops = async () => {
-    const { data } = await api.get('/api/crops', { params: { q, category, district, municipality } });
-    if (data.ok) setCrops(data.crops);
+    setLoading(true);
+    try {
+      const { data } = await api.get('/api/crops', { params: { q, category, district, municipality } });
+      if (data.ok) setCrops(data.crops);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchCrops();
-  }, []); // initial
+    setTimeout(() => setLoaded(true), 80);
+  }, []);
 
   const titleKey = i18n.language === 'np' ? 'titleNp' : 'titleEn';
 
-  const filtered = useMemo(() => crops, [crops]);
-
-  // ✅ ESSENTIAL: add to cart (localStorage) and go to checkout
   const addToCartAndCheckout = (c) => {
     const availableQty = c.availableQty ?? c.inventory?.available ?? c.quantity ?? 0;
     if (availableQty <= 0) return;
-
     let cart = [];
-    try {
-      cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      if (!Array.isArray(cart)) cart = [];
-    } catch {
-      cart = [];
-    }
-
-    const existing = cart.find((x) => x.cropId === c.id);
-    if (existing) {
-      existing.quantity = Number(existing.quantity || 1) + 1;
-      // optional safety: don't exceed stock
-      existing.quantity = Math.min(existing.quantity, Number(availableQty));
-    } else {
-      cart.push({
-        cropId: c.id,
-        title: c.titleEn || c.titleNp,
-        titleEn: c.titleEn,
-        titleNp: c.titleNp,
-        price: c.price,
-        unitPrice: c.price,
-        quantity: 1,
-        unit: c.unit,
-      });
-    }
-
+    try { cart = JSON.parse(localStorage.getItem('cart') || '[]'); if (!Array.isArray(cart)) cart = []; } catch { cart = []; }
+    const existing = cart.find(x => x.cropId === c.id);
+    if (existing) { existing.quantity = Math.min(Number(existing.quantity || 1) + 1, Number(availableQty)); }
+    else { cart.push({ cropId: c.id, title: c.titleEn || c.titleNp, titleEn: c.titleEn, titleNp: c.titleNp, price: c.price, unitPrice: c.price, quantity: 1, unit: c.unit }); }
     localStorage.setItem('cart', JSON.stringify(cart));
     nav('/checkout');
   };
 
+  const hasFilters = q || category || district || municipality;
+
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#f5f7fa',
-        padding: '24px',
-      }}
-    >
-      {/* Responsive Styles */}
+    <div style={{ minHeight: '100vh', background: '#f4f7f2', fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
-        @media (max-width: 968px) {
-          .marketplace-container {
-            padding: 16px !important;
-          }
-          .filter-grid {
-            grid-template-columns: 1fr 1fr !important;
-          }
-          .filter-grid .search-full {
-            grid-column: 1 / -1 !important;
-          }
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+        * { box-sizing: border-box; }
+
+        @keyframes shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
         }
-        @media (max-width: 640px) {
-          .filter-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .crop-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .crop-card-content {
-            flex-direction: column !important;
-          }
-          .crop-actions {
-            flex-direction: row !important;
-            width: 100% !important;
-          }
-          .crop-actions a {
-            flex: 1 !important;
-          }
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
-        select:disabled {
-          opacity: 0.55;
-          cursor: not-allowed !important;
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes floatLeaf {
+          0%, 100% { transform: translateY(0) rotate(-4deg); }
+          50%       { transform: translateY(-16px) rotate(6deg); }
+        }
+
+        .filter-select:focus { border-color: #4a7c3b !important; outline: none; }
+        .filter-input:focus  { border-color: #4a7c3b !important; outline: none; }
+
+        .cat-pill:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(74,124,59,0.2) !important; }
+
+        @media (max-width: 1100px) {
+          .filter-row { grid-template-columns: 1fr 1fr 1fr !important; }
+          .filter-search { grid-column: 1 / -1 !important; }
+        }
+        @media (max-width: 700px) {
+          .filter-row { grid-template-columns: 1fr !important; }
+          .crop-grid  { grid-template-columns: 1fr !important; }
+          .hero-mkt h1 { font-size: 32px !important; }
+        }
+        @media (min-width: 701px) and (max-width: 1099px) {
+          .crop-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
       `}</style>
 
-      <div
-        className="marketplace-container"
-        style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-        }}
-      >
-        {/* Header */}
-        <div
-          style={{
-            marginBottom: '32px',
-          }}
-        >
-          <h1
-            style={{
-              fontSize: '32px',
-              fontWeight: '700',
-              color: '#1a1a1a',
-              margin: 0,
-              marginBottom: '8px',
-            }}
-          >
-            Marketplace
+      {/* ── HERO BANNER ── */}
+      <div className="hero-mkt" style={{
+        background: 'linear-gradient(135deg, #1a3a0d 0%, #2d5a1b 45%, #4a7c3b 100%)',
+        padding: '60px 32px 56px',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* Decorative blobs */}
+        {[
+          { top: '10%', left: '4%', size: 160, dur: 8, delay: 0 },
+          { bottom: '5%', right: '6%', size: 120, dur: 10, delay: 2 },
+          { top: '50%', right: '18%', size: 80, dur: 7, delay: 1 },
+        ].map((b, i) => (
+          <div key={i} style={{
+            position: 'absolute', ...b,
+            width: b.size, height: b.size,
+            borderRadius: '60% 40% 70% 30% / 40% 60% 30% 70%',
+            background: 'rgba(139,195,74,0.15)',
+            animation: `floatLeaf ${b.dur}s ease-in-out infinite`,
+            animationDelay: `${b.delay}s`,
+            pointerEvents: 'none',
+          }} />
+        ))}
+
+        {/* Concentric ring accent */}
+        <div style={{
+          position: 'absolute', top: '50%', right: '8%',
+          transform: 'translateY(-50%)',
+          width: 200, height: 200, borderRadius: '50%',
+          border: '1px solid rgba(255,255,255,0.1)',
+          pointerEvents: 'none',
+        }}>
+          <div style={{ position: 'absolute', inset: 24, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.07)' }} />
+        </div>
+
+        <div style={{
+          maxWidth: 1300, margin: '0 auto',
+          position: 'relative', zIndex: 1,
+        }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.18)',
+            borderRadius: 40, padding: '6px 18px',
+            color: '#c8e6a0', fontSize: 12, fontWeight: 600,
+            letterSpacing: '0.08em', marginBottom: 20,
+            opacity: loaded ? 1 : 0,
+            transition: 'opacity 0.6s ease 0.1s',
+          }}>
+            <span>🌿</span> FRESH FROM THE FARM
+          </div>
+
+          <h1 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 48, fontWeight: 900, color: 'white',
+            margin: '0 0 14px', lineHeight: 1.15,
+            opacity: loaded ? 1 : 0,
+            transform: loaded ? 'none' : 'translateY(20px)',
+            transition: 'all 0.7s cubic-bezier(.22,1,.36,1) 0.2s',
+          }}>
+            Farm{' '}
+            <span style={{
+              background: 'linear-gradient(90deg, #c8e6a0, #8bc34a, #c8e6a0)',
+              backgroundSize: '200% auto',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              animation: 'shimmer 3s linear infinite', fontStyle: 'italic',
+            }}>Marketplace</span>
           </h1>
-          <p
-            style={{
-              fontSize: '15px',
-              color: '#666',
-              margin: 0,
-            }}
-          >
-            Browse fresh crops directly from farmers
+
+          <p style={{
+            fontSize: 16, color: 'rgba(255,255,255,0.75)',
+            margin: 0, fontWeight: 300, maxWidth: 480,
+            opacity: loaded ? 1 : 0,
+            transition: 'opacity 0.7s ease 0.35s',
+          }}>
+            Browse fresh crops directly from verified farmers across Nepal. No middlemen — just honest, fair trade.
           </p>
-        </div>
 
-        {/* Search and Filters */}
-        <div
-          style={{
+          {/* Quick stats */}
+          <div style={{
+            display: 'flex', gap: 32, marginTop: 32, flexWrap: 'wrap',
+            opacity: loaded ? 1 : 0,
+            transition: 'opacity 0.7s ease 0.5s',
+          }}>
+            {[
+              { icon: '🌾', label: `${crops.length} Listings` },
+              { icon: '📍', label: '75+ Districts' },
+              { icon: '✓', label: 'Verified Farmers' },
+            ].map((s, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: 500,
+              }}>
+                <span style={{
+                  background: 'rgba(255,255,255,0.12)', borderRadius: '50%',
+                  width: 32, height: 32, display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', fontSize: 14,
+                }}>{s.icon}</span>
+                {s.label}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── MAIN CONTENT ── */}
+      <div style={{ maxWidth: 1300, margin: '0 auto', padding: '40px 24px' }}>
+
+        {/* ── FILTER PANEL ── */}
+        <Reveal direction="up">
+          <div style={{
             background: 'white',
-            borderRadius: '12px',
-            padding: '24px',
-            marginBottom: '24px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            border: '1px solid #e0e0e0',
-          }}
-        >
-          <div
-            className="filter-grid"
-            style={{
+            borderRadius: 24,
+            padding: '28px 32px',
+            marginBottom: 32,
+            border: '1.5px solid #e4ece2',
+            boxShadow: '0 4px 24px rgba(74,124,59,0.07)',
+          }}>
+            {/* Category Pills */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
+              {CATEGORIES.map(cat => (
+                <button key={cat.value} className="cat-pill"
+                  onClick={() => setCategory(cat.value)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '8px 18px',
+                    borderRadius: 40,
+                    border: category === cat.value ? '2px solid #4a7c3b' : '1.5px solid #d8e8d4',
+                    background: category === cat.value ? '#4a7c3b' : 'white',
+                    color: category === cat.value ? 'white' : '#4a7c3b',
+                    fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    transition: 'all 0.25s cubic-bezier(.22,1,.36,1)',
+                    boxShadow: category === cat.value ? '0 4px 12px rgba(74,124,59,0.3)' : 'none',
+                  }}
+                >
+                  <span>{cat.icon}</span>{cat.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Inputs row */}
+            <div className="filter-row" style={{
               display: 'grid',
-              gridTemplateColumns: '2fr 1fr 1fr 1fr auto',
-              gap: '16px',
-              alignItems: 'end',
-            }}
-          >
-            {/* Search Input */}
-            <div className="search-full">
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: '#333',
-                  marginBottom: '8px',
-                }}
-              >
-                {t('search')}
-              </label>
-              <input
-                type="text"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search crops... (Tomato / टमाटर)"
-                onKeyPress={(e) => e.key === 'Enter' && fetchCrops()}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  outline: 'none',
-                  transition: 'border 0.2s',
-                  boxSizing: 'border-box',
-                }}
-                onFocus={(e) => (e.target.style.borderColor = '#4a7c3b')}
-                onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
-              />
-            </div>
-
-            {/* Category Filter */}
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: '#333',
-                  marginBottom: '8px',
-                }}
-              >
-                {t('category')}
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  outline: 'none',
-                  transition: 'border 0.2s',
-                  boxSizing: 'border-box',
-                  cursor: 'pointer',
-                  background: 'white',
-                }}
-                onFocus={(e) => (e.target.style.borderColor = '#4a7c3b')}
-                onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
-              >
-                <option value="">All Categories</option>
-                <option value="vegetables">Vegetables</option>
-                <option value="fruits">Fruits</option>
-                <option value="grains">Grains</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-
-            {/* ✅ District Filter — dropdown replacing text input */}
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: '#333',
-                  marginBottom: '8px',
-                }}
-              >
-                {t('district')}
-              </label>
-              <select
-                value={district}
-                onChange={(e) => {
-                  setDistrict(e.target.value);
-                  setMunicipality('');
-                }}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  outline: 'none',
-                  transition: 'border 0.2s',
-                  boxSizing: 'border-box',
-                  cursor: 'pointer',
-                  background: 'white',
-                }}
-                onFocus={(e) => (e.target.style.borderColor = '#4a7c3b')}
-                onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
-              >
-                <option value="">All Districts</option>
-                {sortedDistricts.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* ✅ Municipality Filter — dropdown replacing text input, depends on district */}
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: district ? '#333' : '#aaa',
-                  marginBottom: '8px',
-                }}
-              >
-                {t('municipality')}
-              </label>
-              <select
-                value={municipality}
-                onChange={(e) => setMunicipality(e.target.value)}
-                disabled={!district}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  outline: 'none',
-                  transition: 'border 0.2s',
-                  boxSizing: 'border-box',
-                  cursor: district ? 'pointer' : 'not-allowed',
-                  background: district ? 'white' : '#f9f9f9',
-                }}
-                onFocus={(e) => district && (e.target.style.borderColor = '#4a7c3b')}
-                onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
-              >
-                <option value="">{district ? 'All Municipalities' : 'Select district first'}</option>
-                {availableMunicipalities.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Search Button */}
-            <button
-              onClick={fetchCrops}
-              style={{
-                padding: '12px 24px',
-                background: '#4a7c3b',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'background 0.2s',
-                whiteSpace: 'nowrap',
-                height: '44px',
-              }}
-              onMouseOver={(e) => (e.target.style.background = '#3d6630')}
-              onMouseOut={(e) => (e.target.style.background = '#4a7c3b')}
-            >
-              🔍 {t('search')}
-            </button>
-          </div>
-
-          {/* Active Filters Display */}
-          {(q || category || district || municipality) && (
-            <div
-              style={{
-                marginTop: '16px',
-                paddingTop: '16px',
-                borderTop: '1px solid #e0e0e0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                flexWrap: 'wrap',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '13px',
-                  color: '#666',
-                  fontWeight: '600',
-                }}
-              >
-                Active Filters:
-              </span>
-              {q && (
-                <span
-                  style={{
-                    fontSize: '13px',
-                    padding: '4px 10px',
-                    background: '#e8f5e9',
-                    color: '#4a7c3b',
-                    borderRadius: '12px',
-                    fontWeight: '500',
-                  }}
-                >
-                  Search: "{q}"
-                </span>
-              )}
-              {category && (
-                <span
-                  style={{
-                    fontSize: '13px',
-                    padding: '4px 10px',
-                    background: '#e8f5e9',
-                    color: '#4a7c3b',
-                    borderRadius: '12px',
-                    fontWeight: '500',
-                  }}
-                >
-                  {category}
-                </span>
-              )}
-              {district && (
-                <span
-                  style={{
-                    fontSize: '13px',
-                    padding: '4px 10px',
-                    background: '#e8f5e9',
-                    color: '#4a7c3b',
-                    borderRadius: '12px',
-                    fontWeight: '500',
-                  }}
-                >
-                  {district}
-                </span>
-              )}
-              {municipality && (
-                <span
-                  style={{
-                    fontSize: '13px',
-                    padding: '4px 10px',
-                    background: '#e8f5e9',
-                    color: '#4a7c3b',
-                    borderRadius: '12px',
-                    fontWeight: '500',
-                  }}
-                >
-                  {municipality}
-                </span>
-              )}
-              <button
-                onClick={() => {
-                  setQ('');
-                  setCategory('');
-                  setDistrict('');
-                  setMunicipality('');
-                  setTimeout(fetchCrops, 0);
-                }}
-                style={{
-                  fontSize: '13px',
-                  padding: '4px 10px',
-                  background: '#fff',
-                  color: '#666',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  fontWeight: '500',
-                }}
-              >
-                Clear all
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Results Header */}
-        <div
-          style={{
-            marginBottom: '20px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div
-            style={{
-              fontSize: '16px',
-              fontWeight: '600',
-              color: '#333',
-            }}
-          >
-            {filtered.length} {filtered.length === 1 ? 'crop' : 'crops'} found
-          </div>
-        </div>
-
-        {/* Crops Grid */}
-        <div
-          className="crop-grid"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(500px, 1fr))',
-            gap: '20px',
-          }}
-        >
-          {filtered.map((c) => {
-            const availableQty = c.availableQty ?? c.inventory?.available ?? c.quantity ?? 0;
-            const inStock = c.inStock ?? availableQty > 0;
-
-            // ✅ Robust image extraction (array OR JSON string OR single string OR comma-separated)
-            const rawImages = c.images;
-
-            let firstImage = null;
-
-            if (Array.isArray(rawImages) && rawImages.length > 0) {
-              firstImage = rawImages[0];
-            } else if (typeof rawImages === 'string' && rawImages.trim()) {
-              const s = rawImages.trim();
-
-              // JSON string: '["/uploads/a.jpg"]'
-              if (s.startsWith('[') && s.endsWith(']')) {
-                try {
-                  const arr = JSON.parse(s);
-                  if (Array.isArray(arr) && arr.length > 0) firstImage = arr[0];
-                } catch {}
-              }
-
-              // comma-separated: "/uploads/a.jpg,/uploads/b.jpg"
-              if (!firstImage && s.includes(',')) {
-                firstImage = s.split(',')[0].trim();
-              }
-
-              // single string: "/uploads/a.jpg"
-              if (!firstImage) {
-                firstImage = s;
-              }
-            }
-
-            const imageUrl = firstImage
-              ? firstImage.startsWith('http')
-                ? firstImage
-                : `${BACKEND_URL}${firstImage.startsWith('/') ? '' : '/'}${firstImage}`
-              : null;
-
-            return (
-              <div
-                key={c.id}
-                style={{
-                  background: 'white',
-                  borderRadius: '12px',
-                  padding: '20px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid #e0e0e0',
-                  transition: 'all 0.2s',
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                {/* ✅ Image area (this is what your screenshot shows as blank box) */}
-                <div
-                  style={{
-                    width: '100%',
-                    height: '180px',
-                    borderRadius: '10px',
-                    overflow: 'hidden',
-                    background: '#f3f4f6',
-                    border: '1px solid #eee',
-                    marginBottom: '16px',
-                  }}
-                >
-                  {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={c[titleKey]}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
-                      }}
-                      onError={(e) => {
-                        // if image fails, hide it so gray placeholder remains
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  ) : null}
-                </div>
-
-                <div
-                  className="crop-card-content"
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: '16px',
-                  }}
-                >
-                  {/* Crop Info */}
-                  <div style={{ flex: 1 }}>
-                    <h3
-                      style={{
-                        fontSize: '20px',
-                        fontWeight: '700',
-                        color: '#1a1a1a',
-                        margin: 0,
-                        marginBottom: '8px',
-                      }}
-                    >
-                      {c[titleKey]}
-                    </h3>
-
-                    <div
-                      style={{
-                        fontSize: '14px',
-                        color: '#666',
-                        marginBottom: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                      }}
-                    >
-                      <span
-                        style={{
-                          padding: '2px 8px',
-                          background: '#f0f0f0',
-                          borderRadius: '4px',
-                          fontSize: '13px',
-                          fontWeight: '500',
-                        }}
-                      >
-                        {c.category}
-                      </span>
-                      <span>•</span>
-                      <span>📍 {c.district || '-'} {c.municipality || ''}</span>
-                    </div>
-
-                    {/* Badges */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: '8px',
-                        flexWrap: 'wrap',
-                        marginBottom: '12px',
-                      }}
-                    >
-                      <span
-                        style={{
-                          padding: '6px 12px',
-                          background: '#e8f5e9',
-                          color: '#4a7c3b',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                        }}
-                      >
-                        रु {c.price}/{c.unit}
-                      </span>
-
-                      <span
-                        style={{
-                          padding: '6px 12px',
-                          background: '#f0f0f0',
-                          color: '#333',
-                          borderRadius: '6px',
-                          fontSize: '13px',
-                          fontWeight: '600',
-                        }}
-                      >
-                        {t('qty')}: {availableQty}
-                      </span>
-
-                      {!inStock && (
-                        <span
-                          style={{
-                            padding: '6px 12px',
-                            background: '#fee2e2',
-                            color: '#991b1b',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            fontWeight: '700',
-                          }}
-                        >
-                          Out of Stock
-                        </span>
-                      )}
-
-                      {c.farmer?.isVerified && (
-                        <span
-                          style={{
-                            padding: '6px 12px',
-                            background: '#dbeafe',
-                            color: '#1e40af',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                          }}
-                        >
-                          ✓ Verified
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Farmer Info */}
-                    {c.farmer && (
-                      <div
-                        style={{
-                          fontSize: '13px',
-                          color: '#666',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: '24px',
-                            height: '24px',
-                            borderRadius: '50%',
-                            background: '#4a7c3b',
-                            color: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                          }}
-                        >
-                          {c.farmer.fullName?.[0]?.toUpperCase() || 'F'}
-                        </span>
-                        <span>By {c.farmer.fullName || 'Farmer'}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div
-                    className="crop-actions"
+              gridTemplateColumns: '2fr 1fr 1fr',
+              gap: 16, alignItems: 'end',
+            }}>
+              {/* Search */}
+              <div className="filter-search" style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#4a7c3b', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Search</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 16, pointerEvents: 'none' }}>🔍</span>
+                  <input type="text" value={q}
+                    onChange={e => setQ(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && fetchCrops()}
+                    placeholder="Search crops… (Tomato / टमाटर)"
+                    className="filter-input"
                     style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '10px',
-                      minWidth: '120px',
-                      justifyContent: 'center',
+                      width: '100%', padding: '13px 16px 13px 44px',
+                      border: '1.5px solid #d8e8d4', borderRadius: 12,
+                      fontSize: 14, background: '#fafcfa',
+                      transition: 'border 0.2s',
                     }}
-                  >
-                    <Link
-                      to={`/product/${c.id}`}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '10px 20px',
-                        background: 'white',
-                        color: '#4a7c3b',
-                        border: '1px solid #4a7c3b',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        textDecoration: 'none',
-                        transition: 'all 0.2s',
-                        textAlign: 'center',
-                      }}
-                      onMouseOver={(e) => {
-                        e.target.style.background = '#f0f0f0';
-                      }}
-                      onMouseOut={(e) => {
-                        e.target.style.background = 'white';
-                      }}
-                    >
-                      {t('view')}
-                    </Link>
-
-                    {user?.role === 'BUYER' && (
-                      inStock ? (
-                        <button
-                          type="button"
-                          onClick={() => addToCartAndCheckout(c)}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: '10px 20px',
-                            background: '#4a7c3b',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            textDecoration: 'none',
-                            transition: 'background 0.2s',
-                            textAlign: 'center',
-                            cursor: 'pointer',
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.background = '#3d6630';
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.background = '#4a7c3b';
-                          }}
-                        >
-                          {t('order')}
-                        </button>
-                      ) : (
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: '10px 20px',
-                            background: '#e5e7eb',
-                            color: '#6b7280',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            fontWeight: '700',
-                            textAlign: 'center',
-                            cursor: 'not-allowed',
-                            userSelect: 'none',
-                          }}
-                          title="Out of stock"
-                        >
-                          Out of Stock
-                        </div>
-                      )
-                    )}
-                  </div>
+                  />
                 </div>
               </div>
-            );
-          })}
+
+              {/* District */}
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#4a7c3b', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>District</label>
+                <select value={district}
+                  onChange={e => { setDistrict(e.target.value); setMunicipality(''); }}
+                  className="filter-select"
+                  style={{
+                    width: '100%', padding: '13px 16px',
+                    border: '1.5px solid #d8e8d4', borderRadius: 12,
+                    fontSize: 14, background: '#fafcfa', cursor: 'pointer',
+                    transition: 'border 0.2s',
+                  }}
+                >
+                  <option value="">All Districts</option>
+                  {sortedDistricts.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+
+              {/* Municipality */}
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: district ? '#4a7c3b' : '#aabba0', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Municipality</label>
+                <select value={municipality}
+                  onChange={e => setMunicipality(e.target.value)}
+                  disabled={!district}
+                  className="filter-select"
+                  style={{
+                    width: '100%', padding: '13px 16px',
+                    border: '1.5px solid #d8e8d4', borderRadius: 12,
+                    fontSize: 14, background: district ? '#fafcfa' : '#f5f7f4',
+                    cursor: district ? 'pointer' : 'not-allowed',
+                    opacity: district ? 1 : 0.55,
+                    transition: 'border 0.2s',
+                  }}
+                >
+                  <option value="">{district ? 'All Municipalities' : 'Select district first'}</option>
+                  {availableMunicipalities.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Action row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, flexWrap: 'wrap', gap: 12 }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {hasFilters && (
+                  <>
+                    {q && <span style={{ background: '#e8f5e9', color: '#2d5a1b', borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>"{q}"</span>}
+                    {category && <span style={{ background: '#e8f5e9', color: '#2d5a1b', borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>{category}</span>}
+                    {district && <span style={{ background: '#e8f5e9', color: '#2d5a1b', borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>{district}</span>}
+                    {municipality && <span style={{ background: '#e8f5e9', color: '#2d5a1b', borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>{municipality}</span>}
+                    <button onClick={() => { setQ(''); setCategory(''); setDistrict(''); setMunicipality(''); setTimeout(fetchCrops, 0); }}
+                      style={{ background: 'white', border: '1.5px solid #d8e8d4', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#7a8c6e', cursor: 'pointer', fontWeight: 600 }}>
+                      ✕ Clear all
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <button onClick={fetchCrops} style={{
+                padding: '12px 32px',
+                background: 'linear-gradient(135deg, #4a7c3b, #6b9c5a)',
+                color: 'white', border: 'none',
+                borderRadius: 40, fontSize: 14, fontWeight: 700,
+                cursor: 'pointer', transition: 'all 0.25s',
+                boxShadow: '0 4px 16px rgba(74,124,59,0.3)',
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}
+              onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(74,124,59,0.4)'; }}
+              onMouseOut={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(74,124,59,0.3)'; }}
+              >
+                {loading
+                  ? <span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+                  : '🔍'
+                }
+                Search
+              </button>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* ── RESULTS HEADER ── */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          marginBottom: 28,
+        }}>
+          <Reveal direction="left">
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+              <span style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: 28, fontWeight: 900, color: '#1c2e0f',
+              }}>{crops.length}</span>
+              <span style={{ fontSize: 16, color: '#7a8c6e', fontWeight: 500 }}>
+                {crops.length === 1 ? 'crop' : 'crops'} found
+              </span>
+            </div>
+          </Reveal>
         </div>
 
-        {/* Empty State */}
-        {filtered.length === 0 && (
-          <div
-            style={{
-              background: 'white',
-              borderRadius: '12px',
-              padding: '60px 40px',
-              textAlign: 'center',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-              border: '1px solid #e0e0e0',
-            }}
-          >
-            <div style={{ fontSize: '64px', marginBottom: '20px' }}>🌾</div>
-            <h3
-              style={{
-                fontSize: '20px',
-                fontWeight: '600',
-                color: '#1a1a1a',
-                margin: 0,
-                marginBottom: '12px',
-              }}
-            >
-              No crops found
-            </h3>
-            <p
-              style={{
-                fontSize: '15px',
-                color: '#666',
-                margin: 0,
-              }}
-            >
-              Try adjusting your search filters or check back later for new listings
-            </p>
+        {/* ── CROP GRID ── */}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '80px 0' }}>
+            <div style={{
+              width: 48, height: 48, margin: '0 auto 20px',
+              border: '3px solid #d8e8d4', borderTopColor: '#4a7c3b',
+              borderRadius: '50%', animation: 'spin 0.8s linear infinite',
+            }} />
+            <p style={{ color: '#7a8c6e', fontSize: 15 }}>Loading fresh crops…</p>
           </div>
+        ) : crops.length > 0 ? (
+          <div className="crop-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 24,
+          }}>
+            {crops.map((c, i) => (
+              <CropCard
+                key={c.id}
+                c={c}
+                index={i}
+                titleKey={titleKey}
+                BACKEND_URL={BACKEND_URL}
+                user={user}
+                onOrder={addToCartAndCheckout}
+              />
+            ))}
+          </div>
+        ) : (
+          /* Empty state */
+          <Reveal direction="up">
+            <div style={{
+              background: 'white', borderRadius: 24,
+              padding: '80px 40px', textAlign: 'center',
+              border: '1.5px solid #e4ece2',
+              boxShadow: '0 4px 24px rgba(74,124,59,0.06)',
+            }}>
+              <div style={{ fontSize: 72, marginBottom: 20, opacity: 0.4 }}>🌾</div>
+              <h3 style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: 26, fontWeight: 900, color: '#1c2e0f',
+                margin: '0 0 12px',
+              }}>No crops found</h3>
+              <p style={{ fontSize: 15, color: '#7a8c6e', margin: '0 0 28px' }}>
+                Try adjusting your filters or check back later for new listings
+              </p>
+              <button onClick={() => { setQ(''); setCategory(''); setDistrict(''); setMunicipality(''); setTimeout(fetchCrops, 0); }}
+                style={{
+                  padding: '12px 32px',
+                  background: 'linear-gradient(135deg, #4a7c3b, #6b9c5a)',
+                  color: 'white', border: 'none', borderRadius: 40,
+                  fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(74,124,59,0.3)',
+                }}>
+                Clear Filters
+              </button>
+            </div>
+          </Reveal>
         )}
       </div>
     </div>
