@@ -83,6 +83,10 @@ files ignored by git
   - Buyer ↔ Farmer chat using Socket.IO
 
 > **Note on payment:** This is a **demo eSewa flow** (simulated success endpoint). Replace with real gateway callbacks in production.
+> for payment use
+> eSewa ID: 9806800001/2/3/4/5
+Password: Nepal@123
+> Token:123456
 
 ---
 
