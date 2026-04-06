@@ -23,7 +23,142 @@ const resources = {
       profile: "Profile",
       home: "Home",
 
-      // Marketplace page
+      // Homepage Hero
+      heroTitle: "Connect Farmers to Markets",
+      heroSubtitle:
+        "Empowering Nepal's farmers with direct market access, fair prices, and modern agricultural solutions — no middlemen, just growth.",
+      heroBadge: "NEPAL'S AGRICULTURAL MARKETPLACE",
+      heroTitlePart1: "Connect",
+      heroTitleHighlight: "Farmers",
+      heroTitlePart2: "to Markets",
+      exploreMarketplace: "Explore Marketplace",
+      learnMore: "Learn More",
+      scrollHint: "SCROLL",
+
+      // Homepage About
+      aboutLabel: "About the Platform",
+      aboutTitle1: "Revolutionizing Nepal's",
+      aboutTitleHighlight: "Agricultural",
+      aboutTitle2: "Ecosystem",
+      aboutDesc:
+        "Krishi Connect is a revolutionary MERN-based platform that eliminates middlemen by directly connecting local farmers with customers and wholesale buyers. With bilingual support (Nepali/English), AI-powered crop recognition, price prediction tools, and integrated payment systems — we're transforming how Nepal farms, sells, and grows.",
+      tagVerified: "🔒 Verified Farmers",
+      tagRealtime: "⚡ Real-time Updates",
+      tagBilingual: "🌐 Bilingual Support",
+      tagFairTrade: "🤝 Fair Trade Promise",
+
+      // Homepage Features
+      featuresLabel: "Platform Features",
+      featuresTitle1: "Everything You Need to",
+      featuresTitleHighlight: "Grow",
+      feature1Title: "Direct Market Access",
+      feature1Desc:
+        "Connect directly with buyers, eliminating middlemen and maximizing your profits on every harvest.",
+      feature2Title: "AI Price Prediction",
+      feature2Desc:
+        "Smart machine-learning tools analyze market trends to help you set competitive, fair prices.",
+      feature3Title: "Location-Based Search",
+      feature3Desc:
+        "Discover nearby suppliers and buyers to dramatically reduce transportation costs and delays.",
+      feature4Title: "Secure Payments",
+      feature4Desc:
+        "Multiple payment options including eSewa integration and Cash on Delivery for flexibility.",
+      feature5Title: "Integrated Chat",
+      feature5Desc:
+        "Real-time messaging enables instant negotiation, coordination, and relationship building.",
+      feature6Title: "Bilingual Interface",
+      feature6Desc:
+        "Seamlessly switch between Nepali and English — designed for every farmer across Nepal.",
+
+      // Homepage Roles
+      rolesLabel: "Who It's For",
+      rolesTitle1: "Built for Every",
+      rolesTitleHighlight: "Stakeholder",
+      rolesSubtitle: "Our platform serves everyone in the agricultural ecosystem",
+      role1Title: "Farmer",
+      role1Desc:
+        "List crops with photos, set your price, manage inventory, and chat directly with buyers who need your produce.",
+      role2Title: "Buyer",
+      role2Desc:
+        "Browse fresh listings, filter by location, negotiate prices, and order with COD or eSewa — delivered fresh.",
+      role3Title: "Admin",
+      role3Desc:
+        "Verify users, moderate listings, resolve disputes, and keep the entire marketplace running smoothly.",
+
+      // Homepage CTA
+      ctaTitle1: "Ready to Join the",
+      ctaTitleHighlight: "Revolution?",
+      ctaSubtitle:
+        "Join thousands of farmers and buyers who are already growing their businesses on Krishi Connect.",
+      ctaBtn: "Get Started Free →",
+
+      // Footer
+      footerTagline:
+        "Connecting farmers with markets for a sustainable, prosperous Nepal.",
+      footerProduct: "Product",
+      footerLegal: "Legal",
+      footerCommunity: "Community",
+      footerFarmerPortal: "Farmer Portal",
+      footerBuyerPortal: "Buyer Portal",
+      footerAdminPanel: "Admin Panel",
+      footerMarketplace: "Marketplace",
+      footerPrivacy: "Privacy Policy",
+      footerRefund: "Refund Policy",
+      footerPricing: "Pricing Plan",
+      footerFAQ: "FAQs",
+      footerStories: "Success Stories",
+      footerGallery: "Gallery",
+      footerBlog: "Blog",
+      footerContact: "Contact Us",
+      footerCopyright: "© 2025 Krishi Connect. All rights reserved.",
+
+      // ── Marketplace Page ──
+      mktHeroBadge: "FRESH FROM THE FARM",
+      mktHeroTitle1: "Farm",
+      mktHeroTitleHighlight: "Marketplace",
+      mktHeroSubtitle:
+        "Browse fresh crops directly from verified farmers across Nepal. No middlemen — just honest, fair trade.",
+      mktStat1Label: "Listings",
+      mktStat2Label: "75+ Districts",
+      mktStat3Label: "Verified Farmers",
+
+      // Marketplace filters
+      mktCatAll: "All",
+      mktCatVegetables: "Vegetables",
+      mktCatFruits: "Fruits",
+      mktCatGrains: "Grains",
+      mktCatOther: "Other",
+      mktFilterSearch: "Search",
+      mktFilterDistrict: "District",
+      mktFilterMunicipality: "Municipality",
+      mktSearchPlaceholder: "Search crops… (Tomato / टमाटर)",
+      mktAllDistricts: "All Districts",
+      mktAllMunicipalities: "All Municipalities",
+      mktSelectDistrictFirst: "Select district first",
+      mktClearAll: "✕ Clear all",
+      mktSearchBtn: "Search",
+
+      // Marketplace results
+      mktCropSingular: "crop found",
+      mktCropPlural: "crops found",
+      mktLoadingCrops: "Loading fresh crops…",
+      mktNoCropsTitle: "No crops found",
+      mktNoCropsSubtitle:
+        "Try adjusting your filters or check back later for new listings",
+      mktClearFilters: "Clear Filters",
+
+      // Crop card
+      mktOutOfStock: "OUT OF STOCK",
+      mktVerified: "✓ Verified",
+      mktQty: "Qty",
+      mktBy: "by",
+      mktFarmerFallback: "Farmer",
+      mktViewDetails: "View Details",
+      mktOrderBtn: "🛒 Order",
+      mktUnavailable: "Unavailable",
+
+      // Legacy keys kept for compatibility
+      browseAll: "Browse All Crops",
       marketplaceSubtitle: "Browse fresh crops directly from farmers",
       search: "Search",
       searchPlaceholder: "Search crops... (Tomato / टमाटर)",
@@ -43,7 +178,8 @@ const resources = {
       cropsFound: "crops found",
       cropFound: "crop found",
       noCropsFound: "No crops found",
-      noCropsFoundSubtitle: "Try adjusting your search filters or check back later for new listings",
+      noCropsFoundSubtitle:
+        "Try adjusting your search filters or check back later for new listings",
       outOfStock: "Out of Stock",
       inStock: "In Stock",
       verified: "Verified",
@@ -52,21 +188,6 @@ const resources = {
       qty: "Qty",
       view: "View",
       order: "Order Now",
-
-      // Home page
-      heroTitle: "Fresh Crops Direct From Farmers",
-      heroSubtitle: "Connect directly with local farmers for the freshest produce at the best prices",
-      browseAll: "Browse All Crops",
-      learnMore: "Learn More",
-      freshFrom: "Fresh from the farm",
-      featuredCrops: "Featured Crops",
-      whyChooseUs: "Why Choose Us",
-      directFromFarmer: "Direct from Farmer",
-      directFromFarmerDesc: "Buy directly from verified local farmers",
-      freshProduce: "Fresh Produce",
-      freshProduceDesc: "Get the freshest crops harvested just for you",
-      bestPrices: "Best Prices",
-      bestPricesDesc: "Fair prices for both farmers and buyers",
 
       // Login page
       loginTitle: "Welcome Back",
@@ -97,120 +218,6 @@ const resources = {
       currentPassword: "Current Password",
       newPassword: "New Password",
 
-      // Farmer Dashboard
-      myCrops: "My Crops",
-      addCrop: "Add Crop",
-      editCrop: "Edit Crop",
-      noCrops: "No crops listed yet",
-      addFirstCrop: "Add your first crop",
-      cropName: "Crop Name",
-      cropNameNp: "Crop Name (Nepali)",
-      price: "Price",
-      unit: "Unit",
-      quantity: "Quantity",
-      availableQty: "Available Quantity",
-      description: "Description",
-      image: "Image",
-      selectCategory: "Select Category",
-      uploadImage: "Upload Image",
-      farmLocation: "Farm Location",
-      harvestDate: "Harvest Date",
-      organic: "Organic",
-      save: "Save",
-      cancel: "Cancel",
-      delete: "Delete",
-      edit: "Edit",
-      add: "Add",
-      submit: "Submit",
-      cropAdded: "Crop added successfully",
-      cropUpdated: "Crop updated successfully",
-      cropDeleted: "Crop deleted successfully",
-      confirmDelete: "Are you sure you want to delete?",
-      yes: "Yes",
-      no: "No",
-
-      // Farmer Orders
-      farmerOrdersTitle: "Customer Orders",
-      noFarmerOrders: "No customer orders yet",
-
-      // Buyer Orders
-      myOrdersTitle: "My Orders",
-      noOrders: "No orders yet",
-      orderDate: "Order Date",
-      orderStatus: "Order Status",
-      orderTotal: "Order Total",
-      viewDetails: "View Details",
-
-      // Order statuses
-      status: "Status",
-      paid: "Paid",
-      pending: "Pending",
-      processing: "Processing",
-      shipped: "Shipped",
-      delivered: "Delivered",
-      cancelled: "Cancelled",
-
-      // Checkout page
-      checkout: "Checkout",
-      orderSummary: "Order Summary",
-      placeOrder: "Place Order",
-      total: "Total",
-      subtotal: "Subtotal",
-      payNow: "Pay Now",
-      payWithEsewa: "Pay with eSewa",
-      deliveryAddress: "Delivery Address",
-      paymentMethod: "Payment Method",
-
-      // Payment pages
-      paymentSuccess: "Payment Successful!",
-      paymentSuccessMsg: "Your order has been placed successfully",
-      paymentFailure: "Payment Failed",
-      paymentFailureMsg: "Something went wrong with your payment",
-      backToMarket: "Back to Marketplace",
-      orderPlaced: "Order placed successfully",
-      thankYou: "Thank you for your order",
-      continueShopping: "Continue Shopping",
-      tryAgain: "Try Again",
-      contactSupport: "Contact Support",
-      orderRef: "Order Reference",
-
-      // Admin Dashboard
-      users: "Users",
-      crops: "Crops",
-      orders: "Orders",
-      revenue: "Revenue",
-      manageUsers: "Manage Users",
-      manageCrops: "Manage Crops",
-      manageOrders: "Manage Orders",
-      totalUsers: "Total Users",
-      totalCrops: "Total Crops",
-      totalOrders: "Total Orders",
-      totalRevenue: "Total Revenue",
-
-      // Chat page
-      chatWith: "Chat with",
-      sendMessage: "Send",
-      typeMessage: "Type a message...",
-      noMessages: "No messages yet. Start the conversation!",
-      online: "Online",
-      offline: "Offline",
-
-      // Price Prediction
-      pricePrediction: "AI Price Prediction",
-      predictPrice: "Predict Price",
-      predictedPrice: "Predicted Price",
-      selectCrop: "Select Crop",
-      selectDistrict: "Select District",
-      season: "Season",
-
-      // Product Details
-      productDetails: "Product Details",
-      addToCart: "Add to Cart",
-      buyNow: "Buy Now",
-      sellerInfo: "Seller Information",
-      reviews: "Reviews",
-      noReviews: "No reviews yet",
-
       // General
       loading: "Loading...",
       error: "Something went wrong",
@@ -227,6 +234,7 @@ const resources = {
       welcomeBack: "Welcome back",
     }
   },
+
   np: {
     translation: {
       // App
@@ -248,7 +256,143 @@ const resources = {
       profile: "प्रोफाइल",
       home: "गृहपृष्ठ",
 
-      // Marketplace page
+      // Homepage Hero
+      heroTitle: "किसानलाई बजारसँग जोड्दै",
+      heroSubtitle:
+        "नेपालका किसानहरूलाई प्रत्यक्ष बजार पहुँच, उचित मूल्य, र आधुनिक कृषि समाधानहरूमार्फत सशक्त बनाउँदै — बिचौलिया बिनाको सिधा र दिगो विकास।",
+      heroBadge: "नेपालको कृषि बजार",
+      heroTitlePart1: "जोड्दै",
+      heroTitleHighlight: "किसान",
+      heroTitlePart2: "बजारसँग",
+      exploreMarketplace: "बजार हेर्नुहोस्",
+      learnMore: "थप जान्नुहोस्",
+      scrollHint: "तल स्क्रोल गर्नुहोस्",
+
+      // Homepage About
+      aboutLabel: "प्लेटफर्मको बारेमा",
+      aboutTitle1: "नेपालको",
+      aboutTitleHighlight: "कृषि",
+      aboutTitle2: "क्षेत्रमा क्रान्ति",
+      aboutDesc:
+        "कृषि कनेक्ट एक क्रान्तिकारी MERN-आधारित प्लेटफर्म हो जसले स्थानीय किसानहरूलाई ग्राहक र थोक खरिदकर्ताहरूसँग सिधै जोडेर बिचौलियालाई हटाउँछ। द्विभाषी समर्थन (नेपाली/अंग्रेजी), एआई-संचालित बाली पहिचान, मूल्य पूर्वानुमान उपकरण, र एकीकृत भुक्तानी प्रणालीका साथ — हामी नेपालले खेती, बिक्री र विकास गर्ने तरिका बदल्दैछौं।",
+      tagVerified: "🔒 प्रमाणित किसान",
+      tagRealtime: "⚡ रियल-टाइम अपडेट",
+      tagBilingual: "🌐 द्विभाषी समर्थन",
+      tagFairTrade: "🤝 उचित व्यापार वाचा",
+
+      // Homepage Features
+      featuresLabel: "प्लेटफर्म सुविधाहरू",
+      featuresTitle1: "विकासका लागि",
+      featuresTitleHighlight: "सबै सुविधाहरू",
+      feature1Title: "प्रत्यक्ष बजार पहुँच",
+      feature1Desc:
+        "खरिदकर्ताहरूसँग सिधै जोडिनुहोस्, बिचौलियालाई हटाउनुहोस् र प्रत्येक फसलमा आफ्नो नाफा अधिकतम गर्नुहोस्।",
+      feature2Title: "एआई मूल्य पूर्वानुमान",
+      feature2Desc:
+        "स्मार्ट मेशिन लर्निङ उपकरणहरूले बजार प्रवृत्ति विश्लेषण गरेर प्रतिस्पर्धी र उचित मूल्य निर्धारण गर्न मद्दत गर्छन्।",
+      feature3Title: "स्थान-आधारित खोज",
+      feature3Desc:
+        "नजिकका आपूर्तिकर्ता र खरिदकर्ताहरू पत्ता लगाउनुहोस् र यातायात लागत तथा ढिलाइ उल्लेखनीय रूपमा घटाउनुहोस्।",
+      feature4Title: "सुरक्षित भुक्तानी",
+      feature4Desc:
+        "eSewa एकीकरण र क्यास अन डेलिभरी सहित लचिलोपनका लागि बहु भुक्तानी विकल्पहरू।",
+      feature5Title: "एकीकृत च्याट",
+      feature5Desc:
+        "रियल-टाइम सन्देशले तत्काल वार्ता, समन्वय र सम्बन्ध निर्माण सक्षम बनाउँछ।",
+      feature6Title: "द्विभाषी इन्टरफेस",
+      feature6Desc:
+        "नेपाली र अंग्रेजीबीच निर्बाध स्विच गर्नुहोस् — नेपालभरका हर किसानका लागि डिजाइन गरिएको।",
+
+      // Homepage Roles
+      rolesLabel: "कसका लागि हो",
+      rolesTitle1: "हरेक",
+      rolesTitleHighlight: "सरोकारवाला",
+      rolesTitle2: "का लागि निर्मित",
+      rolesSubtitle: "हाम्रो प्लेटफर्म कृषि पारिस्थितिकी तन्त्रका सबैलाई सेवा गर्छ",
+      role1Title: "किसान",
+      role1Desc:
+        "फोटोसहित बाली सूचीबद्ध गर्नुहोस्, मूल्य तोक्नुहोस्, स्टक व्यवस्थापन गर्नुहोस्, र आफ्नो उत्पादन चाहिने खरिदकर्ताहरूसँग सिधै कुराकानी गर्नुहोस्।",
+      role2Title: "खरिदकर्ता",
+      role2Desc:
+        "ताजा सूचीहरू ब्राउज गर्नुहोस्, स्थान अनुसार फिल्टर गर्नुहोस्, मूल्य वार्ता गर्नुहोस्, र COD वा eSewa मार्फत अर्डर गर्नुहोस् — ताजै डेलिभरी।",
+      role3Title: "प्रशासक",
+      role3Desc:
+        "प्रयोगकर्ताहरू प्रमाणित गर्नुहोस्, सूचीहरू मध्यस्थता गर्नुहोस्, विवाद समाधान गर्नुहोस्, र सम्पूर्ण बजार सुचारु राख्नुहोस्।",
+
+      // Homepage CTA
+      ctaTitle1: "क्रान्तिमा सामेल हुन",
+      ctaTitleHighlight: "तयार हुनुहुन्छ?",
+      ctaSubtitle:
+        "हजारौं किसान र खरिदकर्ताहरूसँग सामेल हुनुहोस् जो कृषि कनेक्टमा आफ्नो व्यवसाय बढाइरहेका छन्।",
+      ctaBtn: "नि:शुल्क सुरु गर्नुहोस् →",
+
+      // Footer
+      footerTagline:
+        "दिगो र समृद्ध नेपालका लागि किसानहरूलाई बजारसँग जोड्दै।",
+      footerProduct: "उत्पादन",
+      footerLegal: "कानुनी",
+      footerCommunity: "समुदाय",
+      footerFarmerPortal: "किसान पोर्टल",
+      footerBuyerPortal: "खरिदकर्ता पोर्टल",
+      footerAdminPanel: "प्रशासन प्यानल",
+      footerMarketplace: "बजार",
+      footerPrivacy: "गोपनीयता नीति",
+      footerRefund: "फिर्ता नीति",
+      footerPricing: "मूल्य योजना",
+      footerFAQ: "बारम्बार सोधिने प्रश्नहरू",
+      footerStories: "सफलताका कथाहरू",
+      footerGallery: "ग्यालेरी",
+      footerBlog: "ब्लग",
+      footerContact: "सम्पर्क गर्नुहोस्",
+      footerCopyright: "© २०२५ कृषि कनेक्ट। सर्वाधिकार सुरक्षित।",
+
+      // ── Marketplace Page ──
+      mktHeroBadge: "खेतबाट ताजा",
+      mktHeroTitle1: "कृषि",
+      mktHeroTitleHighlight: "बजार",
+      mktHeroSubtitle:
+        "नेपालभरका प्रमाणित किसानहरूबाट सिधै ताजा बाली ब्राउज गर्नुहोस्। बिचौलिया छैन — सिधा र उचित व्यापार।",
+      mktStat1Label: "सूचीहरू",
+      mktStat2Label: "७५+ जिल्लाहरू",
+      mktStat3Label: "प्रमाणित किसान",
+
+      // Marketplace filters
+      mktCatAll: "सबै",
+      mktCatVegetables: "तरकारी",
+      mktCatFruits: "फलफूल",
+      mktCatGrains: "अन्न",
+      mktCatOther: "अन्य",
+      mktFilterSearch: "खोज्नुहोस्",
+      mktFilterDistrict: "जिल्ला",
+      mktFilterMunicipality: "नगरपालिका",
+      mktSearchPlaceholder: "बाली खोज्नुहोस्… (Tomato / टमाटर)",
+      mktAllDistricts: "सबै जिल्लाहरू",
+      mktAllMunicipalities: "सबै नगरपालिकाहरू",
+      mktSelectDistrictFirst: "पहिले जिल्ला छान्नुहोस्",
+      mktClearAll: "✕ सबै हटाउनुहोस्",
+      mktSearchBtn: "खोज्नुहोस्",
+
+      // Marketplace results
+      mktCropSingular: "बाली भेटियो",
+      mktCropPlural: "बालीहरू भेटिए",
+      mktLoadingCrops: "ताजा बालीहरू लोड हुँदैछ…",
+      mktNoCropsTitle: "कुनै बाली भेटिएन",
+      mktNoCropsSubtitle:
+        "फिल्टर समायोजन गर्नुहोस् वा नयाँ सूचीहरूका लागि पछि जाँच गर्नुहोस्",
+      mktClearFilters: "फिल्टर हटाउनुहोस्",
+
+      // Crop card
+      mktOutOfStock: "स्टक सकियो",
+      mktVerified: "✓ प्रमाणित",
+      mktQty: "मात्रा",
+      mktBy: "द्वारा",
+      mktFarmerFallback: "किसान",
+      mktViewDetails: "विवरण हेर्नुहोस्",
+      mktOrderBtn: "🛒 अर्डर",
+      mktUnavailable: "उपलब्ध छैन",
+
+      // Legacy keys
+      browseAll: "सबै बाली हेर्नुहोस्",
       marketplaceSubtitle: "किसानहरूबाट सिधै ताजा बाली ब्राउज गर्नुहोस्",
       search: "खोज्नुहोस्",
       searchPlaceholder: "बाली खोज्नुहोस्... (Tomato / टमाटर)",
@@ -265,10 +409,11 @@ const resources = {
       selectDistrictFirst: "पहिले जिल्ला छान्नुहोस्",
       activeFilters: "सक्रिय फिल्टरहरू",
       clearAll: "सबै हटाउनुहोस्",
-      cropsFound: "बाली फेला पर्यो",
-      cropFound: "बाली फेला पर्यो",
-      noCropsFound: "कुनै बाली फेला परेन",
-      noCropsFoundSubtitle: "आफ्नो खोज फिल्टर समायोजन गर्नुहोस् वा पछि नयाँ सूचीहरूको लागि जाँच गर्नुहोस्",
+      cropsFound: "बाली भेटियो",
+      cropFound: "बाली भेटियो",
+      noCropsFound: "कुनै बाली भेटिएन",
+      noCropsFoundSubtitle:
+        "खोज फिल्टर समायोजन गर्नुहोस् वा नयाँ सूचीहरूका लागि पछि जाँच गर्नुहोस्",
       outOfStock: "स्टक सकियो",
       inStock: "स्टकमा छ",
       verified: "प्रमाणित",
@@ -276,38 +421,23 @@ const resources = {
       farmer: "किसान",
       qty: "मात्रा",
       view: "हेर्नुहोस्",
-      order: "अर्डर गर्नुहोस्",
-
-      // Home page
-      heroTitle: "किसानहरूबाट सिधै ताजा बाली",
-      heroSubtitle: "सर्वोत्तम मूल्यमा ताजा उत्पादनको लागि स्थानीय किसानहरूसँग सिधै जोडिनुहोस्",
-      browseAll: "सबै बाली हेर्नुहोस्",
-      learnMore: "थप जान्नुहोस्",
-      freshFrom: "खेतबाट ताजा",
-      featuredCrops: "विशेष बालीहरू",
-      whyChooseUs: "हामीलाई किन छान्ने",
-      directFromFarmer: "किसानबाट सिधै",
-      directFromFarmerDesc: "प्रमाणित स्थानीय किसानहरूबाट सिधै किन्नुहोस्",
-      freshProduce: "ताजा उत्पादन",
-      freshProduceDesc: "तपाईंको लागि भर्खरै काटिएको ताजा बाली पाउनुहोस्",
-      bestPrices: "सर्वोत्तम मूल्य",
-      bestPricesDesc: "किसान र खरिदकर्ता दुवैको लागि उचित मूल्य",
+      order: "अहिले अर्डर गर्नुहोस्",
 
       // Login page
-      loginTitle: "स्वागत छ",
+      loginTitle: "फेरि स्वागत छ",
       loginSubtitle: "आफ्नो खातामा साइन इन गर्नुहोस्",
       email: "इमेल",
       password: "पासवर्ड",
       forgotPassword: "पासवर्ड बिर्सनुभयो?",
       noAccount: "खाता छैन?",
-      loginBtn: "साइन इन गर्नुहोस्",
+      loginBtn: "साइन इन",
 
       // Register page
       registerTitle: "खाता बनाउनुहोस्",
       registerSubtitle: "आज कृषि कनेक्टमा सामेल हुनुहोस्",
       name: "पूरा नाम",
       confirmPassword: "पासवर्ड पुष्टि गर्नुहोस्",
-      role: "म हुँ",
+      role: "म एक हुँ",
       buyer: "खरिदकर्ता",
       selectRole: "आफ्नो भूमिका छान्नुहोस्",
       alreadyAccount: "पहिले नै खाता छ?",
@@ -321,120 +451,6 @@ const resources = {
       changePassword: "पासवर्ड परिवर्तन गर्नुहोस्",
       currentPassword: "हालको पासवर्ड",
       newPassword: "नयाँ पासवर्ड",
-
-      // Farmer Dashboard
-      myCrops: "मेरो बाली",
-      addCrop: "बाली थप्नुहोस्",
-      editCrop: "बाली सम्पादन गर्नुहोस्",
-      noCrops: "अहिलेसम्म कुनै बाली सूचीबद्ध छैन",
-      addFirstCrop: "पहिलो बाली थप्नुहोस्",
-      cropName: "बालीको नाम",
-      cropNameNp: "बालीको नाम (नेपाली)",
-      price: "मूल्य",
-      unit: "एकाइ",
-      quantity: "परिमाण",
-      availableQty: "उपलब्ध मात्रा",
-      description: "विवरण",
-      image: "तस्बिर",
-      selectCategory: "श्रेणी छान्नुहोस्",
-      uploadImage: "तस्बिर अपलोड गर्नुहोस्",
-      farmLocation: "खेतको स्थान",
-      harvestDate: "फसल मिति",
-      organic: "जैविक",
-      save: "सुरक्षित गर्नुहोस्",
-      cancel: "रद्द गर्नुहोस्",
-      delete: "मेटाउनुहोस्",
-      edit: "सम्पादन गर्नुहोस्",
-      add: "थप्नुहोस्",
-      submit: "पेश गर्नुहोस्",
-      cropAdded: "बाली सफलतापूर्वक थपियो",
-      cropUpdated: "बाली सफलतापूर्वक अपडेट भयो",
-      cropDeleted: "बाली सफलतापूर्वक मेटियो",
-      confirmDelete: "के तपाईं मेटाउन निश्चित हुनुहुन्छ?",
-      yes: "हो",
-      no: "होइन",
-
-      // Farmer Orders
-      farmerOrdersTitle: "ग्राहकका अर्डरहरू",
-      noFarmerOrders: "अहिलेसम्म कुनै ग्राहक अर्डर छैन",
-
-      // Buyer Orders
-      myOrdersTitle: "मेरो अर्डरहरू",
-      noOrders: "अहिलेसम्म कुनै अर्डर छैन",
-      orderDate: "अर्डर मिति",
-      orderStatus: "अर्डर स्थिति",
-      orderTotal: "अर्डर जम्मा",
-      viewDetails: "विवरण हेर्नुहोस्",
-
-      // Order statuses
-      status: "स्थिति",
-      paid: "भुक्तानी भयो",
-      pending: "बाँकी छ",
-      processing: "प्रशोधन हुँदैछ",
-      shipped: "पठाइयो",
-      delivered: "डेलिभर भयो",
-      cancelled: "रद्द भयो",
-
-      // Checkout page
-      checkout: "चेकआउट",
-      orderSummary: "अर्डर सारांश",
-      placeOrder: "अर्डर दिनुहोस्",
-      total: "जम्मा",
-      subtotal: "उपजम्मा",
-      payNow: "अहिले भुक्तानी गर्नुहोस्",
-      payWithEsewa: "ईसेवाबाट भुक्तानी गर्नुहोस्",
-      deliveryAddress: "डेलिभरी ठेगाना",
-      paymentMethod: "भुक्तानी विधि",
-
-      // Payment pages
-      paymentSuccess: "भुक्तानी सफल भयो!",
-      paymentSuccessMsg: "तपाईंको अर्डर सफलतापूर्वक दिइयो",
-      paymentFailure: "भुक्तानी असफल भयो",
-      paymentFailureMsg: "तपाईंको भुक्तानीमा केही गल्ती भयो",
-      backToMarket: "बजारमा फर्कनुहोस्",
-      orderPlaced: "अर्डर सफलतापूर्वक दिइयो",
-      thankYou: "तपाईंको अर्डरको लागि धन्यवाद",
-      continueShopping: "किनमेल जारी राख्नुहोस्",
-      tryAgain: "फेरि प्रयास गर्नुहोस्",
-      contactSupport: "सहयोगको लागि सम्पर्क गर्नुहोस्",
-      orderRef: "अर्डर सन्दर्भ",
-
-      // Admin Dashboard
-      users: "प्रयोगकर्ताहरू",
-      crops: "बालीहरू",
-      orders: "अर्डरहरू",
-      revenue: "राजस्व",
-      manageUsers: "प्रयोगकर्ता व्यवस्थापन",
-      manageCrops: "बाली व्यवस्थापन",
-      manageOrders: "अर्डर व्यवस्थापन",
-      totalUsers: "कुल प्रयोगकर्ताहरू",
-      totalCrops: "कुल बालीहरू",
-      totalOrders: "कुल अर्डरहरू",
-      totalRevenue: "कुल राजस्व",
-
-      // Chat page
-      chatWith: "सँग कुराकानी",
-      sendMessage: "पठाउनुहोस्",
-      typeMessage: "सन्देश टाइप गर्नुहोस्...",
-      noMessages: "अहिलेसम्म कुनै सन्देश छैन। कुराकानी सुरु गर्नुहोस्!",
-      online: "अनलाइन",
-      offline: "अफलाइन",
-
-      // Price Prediction
-      pricePrediction: "एआई मूल्य अनुमान",
-      predictPrice: "मूल्य अनुमान गर्नुहोस्",
-      predictedPrice: "अनुमानित मूल्य",
-      selectCrop: "बाली छान्नुहोस्",
-      selectDistrict: "जिल्ला छान्नुहोस्",
-      season: "मौसम",
-
-      // Product Details
-      productDetails: "उत्पादन विवरण",
-      addToCart: "कार्टमा थप्नुहोस्",
-      buyNow: "अहिले किन्नुहोस्",
-      sellerInfo: "विक्रेता जानकारी",
-      reviews: "समीक्षाहरू",
-      noReviews: "अहिलेसम्म कुनै समीक्षा छैन",
 
       // General
       loading: "लोड हुँदैछ...",

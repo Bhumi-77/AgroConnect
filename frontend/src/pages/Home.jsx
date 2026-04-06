@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 /* ─── Floating Seed Particle ─── */
 function Particle({ style }) {
@@ -141,6 +142,7 @@ function RoleCard({ icon, title, desc, bg, delay }) {
    MAIN HOME COMPONENT
 ══════════════════════════════════════ */
 export default function Home() {
+  const { t } = useTranslation();
   const [scrollY, setScrollY] = useState(0);
   const [heroLoaded, setHeroLoaded] = useState(false);
 
@@ -163,12 +165,12 @@ export default function Home() {
   }));
 
   const features = [
-    { icon: '🌾', title: 'Direct Market Access', desc: 'Connect directly with buyers, eliminating middlemen and maximizing your profits on every harvest.', accent: '#4a7c3b' },
-    { icon: '🤖', title: 'AI Price Prediction', desc: 'Smart machine-learning tools analyze market trends to help you set competitive, fair prices.', accent: '#f59e0b' },
-    { icon: '📍', title: 'Location-Based Search', desc: 'Discover nearby suppliers and buyers to dramatically reduce transportation costs and delays.', accent: '#ef4444' },
-    { icon: '💳', title: 'Secure Payments', desc: 'Multiple payment options including eSewa integration and Cash on Delivery for flexibility.', accent: '#3b82f6' },
-    { icon: '💬', title: 'Integrated Chat', desc: 'Real-time messaging enables instant negotiation, coordination, and relationship building.', accent: '#8b5cf6' },
-    { icon: '🌏', title: 'Bilingual Interface', desc: 'Seamlessly switch between Nepali and English — designed for every farmer across Nepal.', accent: '#10b981' },
+    { icon: '🌾', title: t('feature1Title'), desc: t('feature1Desc'), accent: '#4a7c3b' },
+    { icon: '🤖', title: t('feature2Title'), desc: t('feature2Desc'), accent: '#f59e0b' },
+    { icon: '📍', title: t('feature3Title'), desc: t('feature3Desc'), accent: '#ef4444' },
+    { icon: '💳', title: t('feature4Title'), desc: t('feature4Desc'), accent: '#3b82f6' },
+    { icon: '💬', title: t('feature5Title'), desc: t('feature5Desc'), accent: '#8b5cf6' },
+    { icon: '🌏', title: t('feature6Title'), desc: t('feature6Desc'), accent: '#10b981' },
   ];
 
   return (
@@ -350,7 +352,7 @@ export default function Home() {
             animation: heroLoaded ? 'badge-pop 0.6s cubic-bezier(.22,1,.36,1) 0.2s both' : 'none',
           }}>
             <span style={{ fontSize: 16 }}>🌱</span>
-            NEPAL'S AGRICULTURAL MARKETPLACE
+            {t('heroBadge')}
           </div>
 
           <h1 className="hero-h1" style={{
@@ -362,7 +364,7 @@ export default function Home() {
             transform: heroLoaded ? 'translateY(0)' : 'translateY(30px)',
             transition: 'all 0.7s cubic-bezier(.22,1,.36,1) 0.25s',
           }}>
-            Connect{' '}
+            {t('heroTitlePart1')}{' '}
             <span style={{
               background: 'linear-gradient(90deg, #c8e6a0, #8bc34a, #c8e6a0)',
               backgroundSize: '200% auto',
@@ -371,8 +373,8 @@ export default function Home() {
               backgroundClip: 'text',
               animation: 'shimmer 3s linear infinite',
               fontStyle: 'italic',
-            }}>Farmers</span>
-            {' '}to Markets
+            }}>{t('heroTitleHighlight')}</span>
+            {' '}{t('heroTitlePart2')}
           </h1>
 
           <p style={{
@@ -382,7 +384,7 @@ export default function Home() {
             transform: heroLoaded ? 'translateY(0)' : 'translateY(20px)',
             transition: 'all 0.7s cubic-bezier(.22,1,.36,1) 0.4s',
           }}>
-            Empowering Nepal's farmers with direct market access, fair prices, and modern agricultural solutions — no middlemen, just growth.
+            {t('heroSubtitle')}
           </p>
 
           <div className="hero-btns" style={{
@@ -403,7 +405,7 @@ export default function Home() {
               boxShadow: '0 8px 24px rgba(74,124,59,0.4)',
               letterSpacing: '0.02em',
             }}>
-              🛒 Explore Marketplace
+              🛒 {t('exploreMarketplace')}
             </Link>
             <a href="#about" className="hero-cta-ghost" style={{
               display: 'inline-block',
@@ -416,7 +418,7 @@ export default function Home() {
               transition: 'all 0.3s',
               backdropFilter: 'blur(8px)',
             }}>
-              Learn More ↓
+              {t('learnMore')} ↓
             </a>
           </div>
         </div>
@@ -430,52 +432,11 @@ export default function Home() {
           animation: heroLoaded ? 'floatUp 2.5s ease-in-out infinite' : 'none',
         }}>
           <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.4)' }} />
-          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, letterSpacing: '0.12em' }}>SCROLL</span>
+          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, letterSpacing: '0.12em' }}>
+            {t('scrollHint')}
+          </span>
         </div>
       </section>
-
-      {/* ── STATS BAR ── */}
-      {/* <section style={{ background: 'white', padding: '64px 24px', borderBottom: '1px solid #e8ede6' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div className="stats-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 24,
-          }}>
-            {[
-              { num: 12000, suffix: '+', label: 'Farmers Registered', icon: '👨‍🌾', color: '#4a7c3b' },
-              { num: 48000, suffix: '+', label: 'Products Listed', icon: '🌾', color: '#f59e0b' },
-              { num: 75, suffix: '+', label: 'Districts Covered', icon: '📍', color: '#ef4444' },
-              { num: 3200, suffix: '+', label: 'Orders Completed', icon: '📦', color: '#3b82f6' },
-            ].map((s, i) => (
-              <Reveal key={i} delay={i * 100} direction="up">
-                <div className="stat-card" style={{
-                  textAlign: 'center', padding: '32px 20px',
-                  borderRadius: 20,
-                  border: '1.5px solid #e8ede6',
-                  transition: 'all 0.3s cubic-bezier(.22,1,.36,1)',
-                  background: 'white',
-                  cursor: 'default',
-                }}>
-                  <div style={{ fontSize: 36, marginBottom: 12 }}>{s.icon}</div>
-                  <div style={{
-                    fontSize: 38, fontWeight: 900,
-                    color: s.color,
-                    fontFamily: "'Playfair Display', serif",
-                    lineHeight: 1,
-                    marginBottom: 8,
-                  }}>
-                    <Counter target={s.num} suffix={s.suffix} />
-                  </div>
-                  <div style={{ fontSize: 13, color: '#7a8c6e', fontWeight: 500, letterSpacing: '0.04em' }}>
-                    {s.label}
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section> */}
 
       {/* ── ABOUT ── */}
       <section id="about" style={{ background: '#f4f7f2', padding: '100px 24px', position: 'relative', overflow: 'hidden' }}>
@@ -497,7 +458,7 @@ export default function Home() {
               borderRadius: 40, padding: '6px 18px',
               fontSize: 12, fontWeight: 600, letterSpacing: '0.1em',
               marginBottom: 24, textTransform: 'uppercase',
-            }}>About the Platform</div>
+            }}>{t('aboutLabel')}</div>
           </Reveal>
 
           <Reveal delay={100} direction="up">
@@ -508,9 +469,9 @@ export default function Home() {
               fontFamily: "'Playfair Display', serif",
               lineHeight: 1.2,
             }}>
-              Revolutionizing Nepal's{' '}
-              <span style={{ color: '#4a7c3b', fontStyle: 'italic' }}>Agricultural</span>{' '}
-              Ecosystem
+              {t('aboutTitle1')}{' '}
+              <span style={{ color: '#4a7c3b', fontStyle: 'italic' }}>{t('aboutTitleHighlight')}</span>{' '}
+              {t('aboutTitle2')}
             </h2>
           </Reveal>
 
@@ -519,7 +480,7 @@ export default function Home() {
               fontSize: 17, lineHeight: 1.9, color: '#5a6b51',
               margin: 0,
             }}>
-              Krishi Connect is a revolutionary MERN-based platform that eliminates middlemen by directly connecting local farmers with customers and wholesale buyers. With bilingual support (Nepali/English), AI-powered crop recognition, price prediction tools, and integrated payment systems — we're transforming how Nepal farms, sells, and grows.
+              {t('aboutDesc')}
             </p>
           </Reveal>
 
@@ -528,7 +489,12 @@ export default function Home() {
               marginTop: 48,
               display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap',
             }}>
-              {['🔒 Verified Farmers', '⚡ Real-time Updates', '🌐 Bilingual Support', '🤝 Fair Trade Promise'].map((tag, i) => (
+              {[
+                t('tagVerified'),
+                t('tagRealtime'),
+                t('tagBilingual'),
+                t('tagFairTrade'),
+              ].map((tag, i) => (
                 <span key={i} style={{
                   background: 'white', border: '1.5px solid #c8dfc0',
                   borderRadius: 40, padding: '8px 20px',
@@ -552,12 +518,13 @@ export default function Home() {
                 borderRadius: 40, padding: '6px 18px',
                 fontSize: 12, fontWeight: 600, letterSpacing: '0.1em',
                 marginBottom: 20, textTransform: 'uppercase',
-              }}>Platform Features</div>
+              }}>{t('featuresLabel')}</div>
               <h2 style={{
                 fontSize: 48, fontWeight: 900, color: '#1c2e0f',
                 margin: 0, fontFamily: "'Playfair Display', serif",
-              }}>Everything You Need to{' '}
-                <span style={{ color: '#4a7c3b', fontStyle: 'italic' }}>Grow</span>
+              }}>
+                {t('featuresTitle1')}{' '}
+                <span style={{ color: '#4a7c3b', fontStyle: 'italic' }}>{t('featuresTitleHighlight')}</span>
               </h2>
             </div>
           </Reveal>
@@ -585,15 +552,16 @@ export default function Home() {
                 borderRadius: 40, padding: '6px 18px',
                 fontSize: 12, fontWeight: 600, letterSpacing: '0.1em',
                 marginBottom: 20, textTransform: 'uppercase',
-              }}>Who It's For</div>
+              }}>{t('rolesLabel')}</div>
               <h2 style={{
                 fontSize: 48, fontWeight: 900, color: '#1c2e0f',
                 margin: '0 0 16px', fontFamily: "'Playfair Display', serif",
-              }}>Built for Every{' '}
-                <span style={{ color: '#4a7c3b', fontStyle: 'italic' }}>Stakeholder</span>
+              }}>
+                {t('rolesTitle1')}{' '}
+                <span style={{ color: '#4a7c3b', fontStyle: 'italic' }}>{t('rolesTitleHighlight')}</span>
               </h2>
               <p style={{ fontSize: 16, color: '#7a8c6e', margin: 0 }}>
-                Our platform serves everyone in the agricultural ecosystem
+                {t('rolesSubtitle')}
               </p>
             </div>
           </Reveal>
@@ -603,63 +571,16 @@ export default function Home() {
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 28, marginBottom: 48,
           }}>
-            <RoleCard icon="🚜" title="Farmer" bg="#e8f5e9"
-              desc="List crops with photos, set your price, manage inventory, and chat directly with buyers who need your produce."
+            <RoleCard icon="🚜" title={t('role1Title')} bg="#e8f5e9"
+              desc={t('role1Desc')}
               delay={0} />
-            <RoleCard icon="🛒" title="Buyer" bg="#e3f2fd"
-              desc="Browse fresh listings, filter by location, negotiate prices, and order with COD or eSewa — delivered fresh."
+            <RoleCard icon="🛒" title={t('role2Title')} bg="#e3f2fd"
+              desc={t('role2Desc')}
               delay={100} />
-            <RoleCard icon="⚙️" title="Admin" bg="#fff8e1"
-              desc="Verify users, moderate listings, resolve disputes, and keep the entire marketplace running smoothly."
+            <RoleCard icon="⚙️" title={t('role3Title')} bg="#fff8e1"
+              desc={t('role3Desc')}
               delay={200} />
           </div>
-
-          {/* Demo Accounts */}
-          {/* <Reveal delay={300} direction="up">
-            <div style={{
-              background: 'white',
-              border: '2px solid #4a7c3b',
-              borderRadius: 20, padding: '32px 36px',
-              maxWidth: 560, margin: '0 auto',
-              boxShadow: '0 8px 32px rgba(74,124,59,0.12)',
-              position: 'relative', overflow: 'hidden',
-            }}>
-              <div style={{
-                position: 'absolute', top: 0, right: 0, width: 120, height: 120,
-                borderRadius: '0 20px 0 100%',
-                background: 'linear-gradient(135deg, #e8f5e9, #c8e6a0)',
-                display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end',
-                padding: '16px 18px', fontSize: 28,
-              }}>🔑</div>
-              <h4 style={{
-                fontSize: 16, fontWeight: 700, color: '#2d5a1b',
-                margin: '0 0 16px',
-                fontFamily: "'Playfair Display', serif",
-              }}>Demo Accounts (after seeding)</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {[
-                  { role: 'Admin', email: 'admin@krishi.local', color: '#ef4444', bg: '#fff5f5' },
-                  { role: 'Farmer', email: 'farmer@krishi.local', color: '#4a7c3b', bg: '#f0faf0' },
-                  { role: 'Buyer', email: 'buyer@krishi.local', color: '#3b82f6', bg: '#f0f7ff' },
-                ].map((acc, i) => (
-                  <div key={i} style={{
-                    background: acc.bg, borderRadius: 10,
-                    padding: '10px 16px',
-                    display: 'flex', alignItems: 'center', gap: 12,
-                  }}>
-                    <span style={{
-                      background: acc.color, color: 'white',
-                      borderRadius: 6, padding: '2px 10px',
-                      fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
-                    }}>{acc.role}</span>
-                    <span style={{ fontSize: 13, color: '#4a5568', fontFamily: 'monospace' }}>
-                      {acc.email} / password123
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Reveal> */}
         </div>
       </section>
 
@@ -682,11 +603,12 @@ export default function Home() {
             <h2 style={{
               fontSize: 48, fontWeight: 900, color: 'white',
               margin: '0 0 20px', fontFamily: "'Playfair Display', serif",
-            }}>Ready to Join the{' '}
-              <span style={{ color: '#8bc34a', fontStyle: 'italic' }}>Revolution?</span>
+            }}>
+              {t('ctaTitle1')}{' '}
+              <span style={{ color: '#8bc34a', fontStyle: 'italic' }}>{t('ctaTitleHighlight')}</span>
             </h2>
             <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.75)', margin: '0 0 44px', lineHeight: 1.8 }}>
-              Join thousands of farmers and buyers who are already growing their businesses on Krishi Connect.
+              {t('ctaSubtitle')}
             </p>
             <Link to="/market" style={{
               display: 'inline-block',
@@ -701,7 +623,7 @@ export default function Home() {
             onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 20px 48px rgba(0,0,0,0.4)'; }}
             onMouseOut={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 12px 36px rgba(0,0,0,0.3)'; }}
             >
-              Get Started Free →
+              {t('ctaBtn')}
             </Link>
           </Reveal>
         </div>
@@ -722,17 +644,26 @@ export default function Home() {
                   fontSize: 20, fontWeight: 900,
                   fontFamily: "'Playfair Display', serif",
                   color: '#8bc34a',
-                }}>Krishi Connect</span>
+                }}>{t('appName')}</span>
               </div>
               <p style={{ fontSize: 14, lineHeight: 1.8, color: 'rgba(255,255,255,0.55)', margin: 0 }}>
-                Connecting farmers with markets for a sustainable, prosperous Nepal.
+                {t('footerTagline')}
               </p>
             </div>
 
             {[
-              { title: 'Product', links: ['Farmer Portal', 'Buyer Portal', 'Admin Panel', 'Marketplace'] },
-              { title: 'Legal', links: ['Privacy Policy', 'Refund Policy', 'Pricing Plan', 'FAQs'] },
-              { title: 'Community', links: ['Success Stories', 'Gallery', 'Blog', 'Contact Us'] },
+              {
+                title: t('footerProduct'),
+                links: [t('footerFarmerPortal'), t('footerBuyerPortal'), t('footerAdminPanel'), t('footerMarketplace')],
+              },
+              {
+                title: t('footerLegal'),
+                links: [t('footerPrivacy'), t('footerRefund'), t('footerPricing'), t('footerFAQ')],
+              },
+              {
+                title: t('footerCommunity'),
+                links: [t('footerStories'), t('footerGallery'), t('footerBlog'), t('footerContact')],
+              },
             ].map((col, i) => (
               <div key={i}>
                 <h4 style={{
@@ -762,7 +693,7 @@ export default function Home() {
             flexWrap: 'wrap', gap: 16,
           }}>
             <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>
-              © 2025 Krishi Connect. All rights reserved.
+              {t('footerCopyright')}
             </span>
             <div style={{ display: 'flex', gap: 20 }}>
               {['🐦', '📘', '📸'].map((ico, i) => (

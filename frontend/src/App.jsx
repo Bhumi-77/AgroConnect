@@ -22,9 +22,10 @@ import Profile from './pages/Profile.jsx';
 import Failure from "./components/Failure";
 import PaymentComponent from "./components/Payment";
 import Success from "./components/Success";
-
-// ✅ ADD THIS import (adjust path/name to match your file)
 import EditCrop from './pages/farmer/EditCrop.jsx';
+
+import ForgotPassword from './pages/ForgetPassword';
+import ResetPassword from './pages/ResetPassword';
 
 function NavBar() {
   const { t, i18n } = useTranslation();
@@ -149,16 +150,6 @@ function NavBar() {
           transform: translateY(-1px);
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
-        @media (max-width: 968px) {
-          .nav-container {
-            flex-direction: column !important;
-            gap: 12px !important;
-            align-items: flex-start !important;
-          }
-          .nav-left, .nav-right {
-            flex-wrap: wrap;
-          }
-        }
       `}</style>
 
       <div style={{
@@ -166,46 +157,44 @@ function NavBar() {
         margin: '0 auto',
         padding: '12px 24px'
       }}>
-        <div className="nav-container" style={{
+        <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 16
         }}>
-          {/* Left side - Brand and Navigation */}
-          <div className="nav-left" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4
-          }}>
+
+          {/* Left */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <Link to="/" className="nav-brand">
               <span style={{ fontSize: '24px' }}>🌾</span>
               {t('appName')}
             </Link>
-            
+
             <Link to="/market" className="nav-link">{t('marketplace')}</Link>
 
-            {/* ✅ Buyer nav */}
+            {/* Buyer */}
             {user?.role === 'BUYER' && <Link to="/buyer/orders" className="nav-link">My Orders</Link>}
 
-            {/* ✅ Farmer nav */}
+            {/* Farmer */}
             {user?.role === 'FARMER' && <Link to="/farmer" className="nav-link">{t('dashboard')}</Link>}
             {user?.role === 'FARMER' && <Link to="/farmer/orders" className="nav-link">Customer Orders</Link>}
+
+            {/* Admin (now stronger role) */}
+            {user?.role === 'ADMIN' && (
+              <>
+                <Link to="/admin" className="nav-link">Admin Panel</Link>
+                {/* <Link to="/farmer" className="nav-link">Farmer Dashboard</Link> */}
+                {/* <Link to="/buyer/orders" className="nav-link">All Orders</Link> */}
+              </>
+            )}
+
             {user && <Link to="/price" className="nav-link">AI Price</Link>}
-
-            {/* ✅ Admin nav */}
-            {user?.role === 'ADMIN' && <Link to="/admin" className="nav-link">{t('admin')}</Link>}
-
-            {/* ✅ Common for logged-in users */}
             {user && <Link to="/chat" className="nav-link">{t('chat')}</Link>}
           </div>
 
-          {/* Right side - Language and Auth */}
-          <div className="nav-right" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10
-          }}>
+          {/* Right */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <select
               className="nav-select"
               value={i18n.language}
@@ -226,15 +215,12 @@ function NavBar() {
               </>
             ) : (
               <>
-                <Link to="/login" className="nav-btn-secondary">
-                  {t('login')}
-                </Link>
-                <Link to="/register" className="nav-btn-primary">
-                  {t('register')}
-                </Link>
+                <Link to="/login" className="nav-btn-secondary">{t('login')}</Link>
+                <Link to="/register" className="nav-btn-primary">{t('register')}</Link>
               </>
             )}
           </div>
+
         </div>
       </div>
     </div>
@@ -253,34 +239,40 @@ export default function App() {
     <AuthProvider>
       <NavBar />
       <Routes>
+
         <Route path="/" element={<Home />} />
         <Route path="/market" element={<Marketplace />} />
         <Route path="/product/:id" element={<ProductDetails />} />
 
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+<Route path="/reset-password" element={<ResetPassword />} />
+
         <Route path="/price" element={<Protected roles={['BUYER','FARMER','ADMIN']}><PricePrediction /></Protected>} />
 
-        <Route path="/farmer" element={<Protected roles={['FARMER']}><FarmerDashboard /></Protected>} />
-        <Route path="/farmer/add" element={<Protected roles={['FARMER']}><AddCrop /></Protected>} />
-        <Route path="/farmer/orders" element={<Protected roles={['FARMER']}><FarmerOrders /></Protected>} />
+        {/* Farmer + Admin access */}
+        <Route path="/farmer" element={<Protected roles={['FARMER','ADMIN']}><FarmerDashboard /></Protected>} />
+        <Route path="/farmer/add" element={<Protected roles={['FARMER','ADMIN']}><AddCrop /></Protected>} />
+        <Route path="/farmer/orders" element={<Protected roles={['FARMER','ADMIN']}><FarmerOrders /></Protected>} />
+        <Route path="/farmer/edit/:id" element={<Protected roles={['FARMER','ADMIN']}><EditCrop /></Protected>} />
 
-        {/* ✅ ADD THIS ROUTE so Edit works */}
-        <Route path="/farmer/edit/:id" element={<Protected roles={['FARMER']}><EditCrop /></Protected>} />
-
+        {/* Admin */}
         <Route path="/admin" element={<Protected roles={['ADMIN']}><AdminDashboard /></Protected>} />
 
-        <Route path="/checkout" element={<Protected roles={['BUYER']}><Checkout/></Protected>} />
+        {/* Buyer + Admin */}
+        <Route path="/checkout" element={<Protected roles={['BUYER','ADMIN']}><Checkout/></Protected>} />
         <Route path="/buyer/orders" element={<Protected roles={['BUYER']}><BuyerOrders /></Protected>} />
 
+        {/* Common */}
         <Route path="/chat" element={<Protected roles={['BUYER','FARMER','ADMIN']}><Chat /></Protected>} />
         <Route path="/profile" element={<Protected roles={['BUYER','FARMER','ADMIN']}><Profile /></Protected>} />
 
-       < Route path="/" element={<PaymentComponent />} />
-            <Route path="/payment-success" element={<Success />} />
-            <Route path="/payment-failure" element={<Failure />} />
+        <Route path="/payment-success" element={<Success />} />
+        <Route path="/payment-failure" element={<Failure />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
+
       </Routes>
     </AuthProvider>
   );

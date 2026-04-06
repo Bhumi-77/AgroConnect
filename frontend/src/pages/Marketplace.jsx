@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
@@ -81,7 +81,6 @@ const NEPAL_DATA = {
   "Udayapur": ["Triyuga Municipality","Belaka Municipality","Chaudandigadhi Municipality","Katari Municipality","Udayapurgadhi Rural Municipality","Tapli Rural Municipality","Rautamai Rural Municipality","Limchungbung Rural Municipality"],
 };
 
-
 // ── Scroll Reveal ──
 function Reveal({ children, delay = 0, direction = 'up' }) {
   const ref = useRef(null);
@@ -101,15 +100,6 @@ function Reveal({ children, delay = 0, direction = 'up' }) {
   );
 }
 
-// ── Category pill data ──
-const CATEGORIES = [
-  { value: '', label: 'All', icon: '🌿' },
-  { value: 'vegetables', label: 'Vegetables', icon: '🥬' },
-  { value: 'fruits', label: 'Fruits', icon: '🍎' },
-  { value: 'grains', label: 'Grains', icon: '🌾' },
-  { value: 'other', label: 'Other', icon: '🪴' },
-];
-
 const CATEGORY_COLORS = {
   vegetables: { bg: '#e8f5e9', color: '#2d5a1b' },
   fruits:     { bg: '#fff3e0', color: '#b45309' },
@@ -119,14 +109,13 @@ const CATEGORY_COLORS = {
 };
 
 // ── Crop Card ──
-function CropCard({ c, titleKey, BACKEND_URL, user, onOrder, index }) {
+function CropCard({ c, titleKey, BACKEND_URL, user, onOrder, index, t }) {
   const [hovered, setHovered] = useState(false);
   const [imgErr, setImgErr] = useState(false);
 
   const availableQty = c.availableQty ?? c.inventory?.available ?? c.quantity ?? 0;
   const inStock = c.inStock ?? availableQty > 0;
 
-  // Robust image extraction
   const rawImages = c.images;
   let firstImage = null;
   if (Array.isArray(rawImages) && rawImages.length > 0) {
@@ -186,7 +175,6 @@ function CropCard({ c, titleKey, BACKEND_URL, user, onOrder, index }) {
             </div>
           )}
 
-          {/* Out-of-stock overlay */}
           {!inStock && (
             <div style={{
               position: 'absolute', inset: 0,
@@ -197,11 +185,10 @@ function CropCard({ c, titleKey, BACKEND_URL, user, onOrder, index }) {
                 background: '#991b1b', color: 'white',
                 padding: '6px 16px', borderRadius: 30,
                 fontSize: 13, fontWeight: 700, letterSpacing: '0.06em',
-              }}>OUT OF STOCK</span>
+              }}>{t('mktOutOfStock')}</span>
             </div>
           )}
 
-          {/* Verified badge */}
           {c.farmer?.isVerified && (
             <div style={{
               position: 'absolute', top: 12, right: 12,
@@ -210,10 +197,9 @@ function CropCard({ c, titleKey, BACKEND_URL, user, onOrder, index }) {
               borderRadius: 20, padding: '4px 10px',
               fontSize: 12, fontWeight: 700, color: '#1e40af',
               display: 'flex', alignItems: 'center', gap: 4,
-            }}>✓ Verified</div>
+            }}>{t('mktVerified')}</div>
           )}
 
-          {/* Category pill */}
           <div style={{
             position: 'absolute', top: 12, left: 12,
             background: catStyle.bg,
@@ -224,7 +210,6 @@ function CropCard({ c, titleKey, BACKEND_URL, user, onOrder, index }) {
 
         {/* Body */}
         <div style={{ padding: '20px 22px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {/* Title & location */}
           <div>
             <h3 style={{
               fontFamily: "'Playfair Display', serif",
@@ -233,11 +218,13 @@ function CropCard({ c, titleKey, BACKEND_URL, user, onOrder, index }) {
             }}>{c[titleKey]}</h3>
             <div style={{ fontSize: 13, color: '#7a8c6e', display: 'flex', alignItems: 'center', gap: 4 }}>
               <span>📍</span>
-              <span>{[c.district, c.municipality].filter(Boolean).join(', ') || '—'}</span>
+              <span>{[
+  t(`districts.${c.district}`) || c.district,
+  t(`municipalities.${c.municipality}`) || c.municipality
+].filter(Boolean).join(', ')}</span>
             </div>
           </div>
 
-          {/* Price + qty */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span style={{
               fontFamily: "'Playfair Display', serif",
@@ -247,10 +234,9 @@ function CropCard({ c, titleKey, BACKEND_URL, user, onOrder, index }) {
               background: '#f0f7ee', color: '#4a7c3b',
               borderRadius: 20, padding: '3px 12px',
               fontSize: 12, fontWeight: 600,
-            }}>Qty: {availableQty}</span>
+            }}>{t('mktQty')}: {availableQty}</span>
           </div>
 
-          {/* Farmer */}
           {c.farmer && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{
@@ -259,14 +245,14 @@ function CropCard({ c, titleKey, BACKEND_URL, user, onOrder, index }) {
                 color: 'white', display: 'flex', alignItems: 'center',
                 justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0,
               }}>{c.farmer.fullName?.[0]?.toUpperCase() || 'F'}</div>
-              <span style={{ fontSize: 13, color: '#5a6b51' }}>by {c.farmer.fullName || 'Farmer'}</span>
+              <span style={{ fontSize: 13, color: '#5a6b51' }}>
+                {t('mktBy')} {c.farmer.fullName || t('mktFarmerFallback')}
+              </span>
             </div>
           )}
 
-          {/* Spacer */}
           <div style={{ flex: 1 }} />
 
-          {/* Actions */}
           <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
             <Link to={`/product/${c.id}`} style={{
               flex: 1, textAlign: 'center',
@@ -279,7 +265,7 @@ function CropCard({ c, titleKey, BACKEND_URL, user, onOrder, index }) {
             }}
             onMouseOver={e => { e.currentTarget.style.background = '#f0faf0'; }}
             onMouseOut={e => { e.currentTarget.style.background = 'white'; }}
-            >View Details</Link>
+            >{t('mktViewDetails')}</Link>
 
             {user?.role === 'BUYER' && (
               inStock ? (
@@ -294,14 +280,14 @@ function CropCard({ c, titleKey, BACKEND_URL, user, onOrder, index }) {
                 }}
                 onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(74,124,59,0.4)'; }}
                 onMouseOut={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(74,124,59,0.3)'; }}
-                >🛒 Order</button>
+                >{t('mktOrderBtn')}</button>
               ) : (
                 <div style={{
                   flex: 1, padding: '10px 0', textAlign: 'center',
                   background: '#f3f4f6', color: '#9ca3af',
                   borderRadius: 40, fontSize: 13, fontWeight: 600,
                   cursor: 'not-allowed',
-                }}>Unavailable</div>
+                }}>{t('mktUnavailable')}</div>
               )
             )}
           </div>
@@ -330,6 +316,15 @@ export default function Marketplace() {
   const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
   const sortedDistricts = Object.keys(NEPAL_DATA).sort();
   const availableMunicipalities = district ? NEPAL_DATA[district] || [] : [];
+
+  // Category pills built with translated labels
+  const CATEGORIES = [
+    { value: '', label: t('mktCatAll'), icon: '🌿' },
+    { value: 'vegetables', label: t('mktCatVegetables'), icon: '🥬' },
+    { value: 'fruits', label: t('mktCatFruits'), icon: '🍎' },
+    { value: 'grains', label: t('mktCatGrains'), icon: '🌾' },
+    { value: 'other', label: t('mktCatOther'), icon: '🪴' },
+  ];
 
   const fetchCrops = async () => {
     setLoading(true);
@@ -362,6 +357,11 @@ export default function Marketplace() {
 
   const hasFilters = q || category || district || municipality;
 
+  const clearAll = () => {
+    setQ(''); setCategory(''); setDistrict(''); setMunicipality('');
+    setTimeout(fetchCrops, 0);
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#f4f7f2', fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`
@@ -386,7 +386,6 @@ export default function Marketplace() {
 
         .filter-select:focus { border-color: #4a7c3b !important; outline: none; }
         .filter-input:focus  { border-color: #4a7c3b !important; outline: none; }
-
         .cat-pill:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(74,124,59,0.2) !important; }
 
         @media (max-width: 1100px) {
@@ -409,7 +408,6 @@ export default function Marketplace() {
         padding: '60px 32px 56px',
         position: 'relative', overflow: 'hidden',
       }}>
-        {/* Decorative blobs */}
         {[
           { top: '10%', left: '4%', size: 160, dur: 8, delay: 0 },
           { bottom: '5%', right: '6%', size: 120, dur: 10, delay: 2 },
@@ -426,7 +424,6 @@ export default function Marketplace() {
           }} />
         ))}
 
-        {/* Concentric ring accent */}
         <div style={{
           position: 'absolute', top: '50%', right: '8%',
           transform: 'translateY(-50%)',
@@ -437,10 +434,7 @@ export default function Marketplace() {
           <div style={{ position: 'absolute', inset: 24, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.07)' }} />
         </div>
 
-        <div style={{
-          maxWidth: 1300, margin: '0 auto',
-          position: 'relative', zIndex: 1,
-        }}>
+        <div style={{ maxWidth: 1300, margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)',
@@ -451,7 +445,7 @@ export default function Marketplace() {
             opacity: loaded ? 1 : 0,
             transition: 'opacity 0.6s ease 0.1s',
           }}>
-            <span>🌿</span> FRESH FROM THE FARM
+            <span>🌿</span> {t('mktHeroBadge')}
           </div>
 
           <h1 style={{
@@ -462,14 +456,14 @@ export default function Marketplace() {
             transform: loaded ? 'none' : 'translateY(20px)',
             transition: 'all 0.7s cubic-bezier(.22,1,.36,1) 0.2s',
           }}>
-            Farm{' '}
+            {t('mktHeroTitle1')}{' '}
             <span style={{
               background: 'linear-gradient(90deg, #c8e6a0, #8bc34a, #c8e6a0)',
               backgroundSize: '200% auto',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
               animation: 'shimmer 3s linear infinite', fontStyle: 'italic',
-            }}>Marketplace</span>
+            }}>{t('mktHeroTitleHighlight')}</span>
           </h1>
 
           <p style={{
@@ -478,19 +472,18 @@ export default function Marketplace() {
             opacity: loaded ? 1 : 0,
             transition: 'opacity 0.7s ease 0.35s',
           }}>
-            Browse fresh crops directly from verified farmers across Nepal. No middlemen — just honest, fair trade.
+            {t('mktHeroSubtitle')}
           </p>
 
-          {/* Quick stats */}
           <div style={{
             display: 'flex', gap: 32, marginTop: 32, flexWrap: 'wrap',
             opacity: loaded ? 1 : 0,
             transition: 'opacity 0.7s ease 0.5s',
           }}>
             {[
-              { icon: '🌾', label: `${crops.length} Listings` },
-              { icon: '📍', label: '75+ Districts' },
-              { icon: '✓', label: 'Verified Farmers' },
+              { icon: '🌾', label: `${crops.length} ${t('mktStat1Label')}` },
+              { icon: '📍', label: t('mktStat2Label') },
+              { icon: '✓',  label: t('mktStat3Label') },
             ].map((s, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 8,
@@ -528,8 +521,7 @@ export default function Marketplace() {
                   onClick={() => setCategory(cat.value)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '8px 18px',
-                    borderRadius: 40,
+                    padding: '8px 18px', borderRadius: 40,
                     border: category === cat.value ? '2px solid #4a7c3b' : '1.5px solid #d8e8d4',
                     background: category === cat.value ? '#4a7c3b' : 'white',
                     color: category === cat.value ? 'white' : '#4a7c3b',
@@ -551,13 +543,15 @@ export default function Marketplace() {
             }}>
               {/* Search */}
               <div className="filter-search" style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#4a7c3b', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Search</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#4a7c3b', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  {t('mktFilterSearch')}
+                </label>
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 16, pointerEvents: 'none' }}>🔍</span>
                   <input type="text" value={q}
                     onChange={e => setQ(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && fetchCrops()}
-                    placeholder="Search crops… (Tomato / टमाटर)"
+                    placeholder={t('mktSearchPlaceholder')}
                     className="filter-input"
                     style={{
                       width: '100%', padding: '13px 16px 13px 44px',
@@ -571,7 +565,9 @@ export default function Marketplace() {
 
               {/* District */}
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#4a7c3b', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>District</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#4a7c3b', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  {t('mktFilterDistrict')}
+                </label>
                 <select value={district}
                   onChange={e => { setDistrict(e.target.value); setMunicipality(''); }}
                   className="filter-select"
@@ -582,14 +578,16 @@ export default function Marketplace() {
                     transition: 'border 0.2s',
                   }}
                 >
-                  <option value="">All Districts</option>
+                  <option value="">{t('mktAllDistricts')}</option>
                   {sortedDistricts.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
 
               {/* Municipality */}
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: district ? '#4a7c3b' : '#aabba0', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Municipality</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: district ? '#4a7c3b' : '#aabba0', marginBottom: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  {t('mktFilterMunicipality')}
+                </label>
                 <select value={municipality}
                   onChange={e => setMunicipality(e.target.value)}
                   disabled={!district}
@@ -603,7 +601,7 @@ export default function Marketplace() {
                     transition: 'border 0.2s',
                   }}
                 >
-                  <option value="">{district ? 'All Municipalities' : 'Select district first'}</option>
+                  <option value="">{district ? t('mktAllMunicipalities') : t('mktSelectDistrictFirst')}</option>
                   {availableMunicipalities.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
@@ -618,9 +616,9 @@ export default function Marketplace() {
                     {category && <span style={{ background: '#e8f5e9', color: '#2d5a1b', borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>{category}</span>}
                     {district && <span style={{ background: '#e8f5e9', color: '#2d5a1b', borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>{district}</span>}
                     {municipality && <span style={{ background: '#e8f5e9', color: '#2d5a1b', borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>{municipality}</span>}
-                    <button onClick={() => { setQ(''); setCategory(''); setDistrict(''); setMunicipality(''); setTimeout(fetchCrops, 0); }}
+                    <button onClick={clearAll}
                       style={{ background: 'white', border: '1.5px solid #d8e8d4', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#7a8c6e', cursor: 'pointer', fontWeight: 600 }}>
-                      ✕ Clear all
+                      {t('mktClearAll')}
                     </button>
                   </>
                 )}
@@ -642,17 +640,14 @@ export default function Marketplace() {
                   ? <span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
                   : '🔍'
                 }
-                Search
+                {t('mktSearchBtn')}
               </button>
             </div>
           </div>
         </Reveal>
 
         {/* ── RESULTS HEADER ── */}
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          marginBottom: 28,
-        }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
           <Reveal direction="left">
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
               <span style={{
@@ -660,7 +655,7 @@ export default function Marketplace() {
                 fontSize: 28, fontWeight: 900, color: '#1c2e0f',
               }}>{crops.length}</span>
               <span style={{ fontSize: 16, color: '#7a8c6e', fontWeight: 500 }}>
-                {crops.length === 1 ? 'crop' : 'crops'} found
+                {crops.length === 1 ? t('mktCropSingular') : t('mktCropPlural')}
               </span>
             </div>
           </Reveal>
@@ -674,7 +669,7 @@ export default function Marketplace() {
               border: '3px solid #d8e8d4', borderTopColor: '#4a7c3b',
               borderRadius: '50%', animation: 'spin 0.8s linear infinite',
             }} />
-            <p style={{ color: '#7a8c6e', fontSize: 15 }}>Loading fresh crops…</p>
+            <p style={{ color: '#7a8c6e', fontSize: 15 }}>{t('mktLoadingCrops')}</p>
           </div>
         ) : crops.length > 0 ? (
           <div className="crop-grid" style={{
@@ -691,11 +686,11 @@ export default function Marketplace() {
                 BACKEND_URL={BACKEND_URL}
                 user={user}
                 onOrder={addToCartAndCheckout}
+                t={t}
               />
             ))}
           </div>
         ) : (
-          /* Empty state */
           <Reveal direction="up">
             <div style={{
               background: 'white', borderRadius: 24,
@@ -708,19 +703,18 @@ export default function Marketplace() {
                 fontFamily: "'Playfair Display', serif",
                 fontSize: 26, fontWeight: 900, color: '#1c2e0f',
                 margin: '0 0 12px',
-              }}>No crops found</h3>
+              }}>{t('mktNoCropsTitle')}</h3>
               <p style={{ fontSize: 15, color: '#7a8c6e', margin: '0 0 28px' }}>
-                Try adjusting your filters or check back later for new listings
+                {t('mktNoCropsSubtitle')}
               </p>
-              <button onClick={() => { setQ(''); setCategory(''); setDistrict(''); setMunicipality(''); setTimeout(fetchCrops, 0); }}
-                style={{
-                  padding: '12px 32px',
-                  background: 'linear-gradient(135deg, #4a7c3b, #6b9c5a)',
-                  color: 'white', border: 'none', borderRadius: 40,
-                  fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                  boxShadow: '0 4px 16px rgba(74,124,59,0.3)',
-                }}>
-                Clear Filters
+              <button onClick={clearAll} style={{
+                padding: '12px 32px',
+                background: 'linear-gradient(135deg, #4a7c3b, #6b9c5a)',
+                color: 'white', border: 'none', borderRadius: 40,
+                fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(74,124,59,0.3)',
+              }}>
+                {t('mktClearFilters')}
               </button>
             </div>
           </Reveal>
