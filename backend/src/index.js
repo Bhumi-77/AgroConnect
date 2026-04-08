@@ -20,6 +20,8 @@ import priceRoutes from "./routes/price.routes.js";
 import { authSocket } from "./socket/authSocket.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 
+console.log('✅ Loaded adminRoutes from ./routes/admin.routes.js');
+
 export const prisma = new PrismaClient();
 
 const app = express();

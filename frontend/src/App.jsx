@@ -7,7 +7,10 @@ import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import PaymentFailure from './pages/PaymentFailure.jsx';
 import Checkout from "./pages/Checkout.jsx";
 import PricePrediction from "./pages/PricePrediction.jsx";
-
+import AdminUsers from './pages/admin/AdminUsers.jsx';
+import AdminTransactions from './pages/admin/AdminTransaction.jsx';
+import AdminReports from './pages/admin/AdminReports.jsx';
+import AdminPayments from './pages/admin/AdminPayments.jsx';
 import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
@@ -183,7 +186,11 @@ function NavBar() {
             {/* Admin (now stronger role) */}
             {user?.role === 'ADMIN' && (
               <>
-                <Link to="/admin" className="nav-link">Admin Panel</Link>
+                <Link to="/admin" className="nav-link">Dashboard</Link>
+    <Link to="/admin/users" className="nav-link">Users</Link>
+    <Link to="/admin/transactions" className="nav-link">Transactions</Link>
+    <Link to="/admin/reports" className="nav-link">Reports</Link>
+    <Link to="/admin/payments" className="nav-link">Payments</Link>
                 {/* <Link to="/farmer" className="nav-link">Farmer Dashboard</Link> */}
                 {/* <Link to="/buyer/orders" className="nav-link">All Orders</Link> */}
               </>
@@ -240,6 +247,11 @@ export default function App() {
       <NavBar />
       <Routes>
 
+      <Route path="/admin/users" element={<Protected roles={['ADMIN']}><AdminUsers /></Protected>} />
+<Route path="/admin/transactions" element={<Protected roles={['ADMIN']}><AdminTransactions /></Protected>} />
+<Route path="/admin/reports" element={<Protected roles={['ADMIN']}><AdminReports /></Protected>} />
+<Route path="/admin/payments" element={<Protected roles={['ADMIN']}><AdminPayments /></Protected>} />
+
         <Route path="/" element={<Home />} />
         <Route path="/market" element={<Marketplace />} />
         <Route path="/product/:id" element={<ProductDetails />} />
@@ -268,8 +280,8 @@ export default function App() {
         <Route path="/chat" element={<Protected roles={['BUYER','FARMER','ADMIN']}><Chat /></Protected>} />
         <Route path="/profile" element={<Protected roles={['BUYER','FARMER','ADMIN']}><Profile /></Protected>} />
 
-        <Route path="/payment-success" element={<Success />} />
-        <Route path="/payment-failure" element={<Failure />} />
+       <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-failure" element={<PaymentFailure />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
 
