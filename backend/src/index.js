@@ -16,11 +16,12 @@ import orderRoutes from "./routes/order.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import priceRoutes from "./routes/price.routes.js";
+import demandRoutes from "./routes/demand.routes.js";
 
 import { authSocket } from "./socket/authSocket.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 
-console.log('✅ Loaded adminRoutes from ./routes/admin.routes.js');
+
 
 export const prisma = new PrismaClient();
 
@@ -39,8 +40,9 @@ app.use(cors(corsOptions));
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ CRITICAL: Serve uploads with NO security restrictions
+//  CRITICAL: Serve uploads with NO security restrictions
 const uploadsPath = path.join(__dirname, "../uploads");
+
 
 app.use("/uploads", (req, res, next) => {
   // Remove ALL security headers that might block images
@@ -92,6 +94,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/price", priceRoutes);
 app.use("/api/payments", paymentEsewaRoutes);
+app.use("/api/demands", demandRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

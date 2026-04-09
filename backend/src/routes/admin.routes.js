@@ -164,11 +164,11 @@ router.get('/users', requireAuth, requireRole('ADMIN'), async (req, res) => {
 
     const formattedUsers = users.map((user) => ({
       ...user,
-      status: user.status || 'ACTIVE', // ✅ fallback
+      status: user.status || 'ACTIVE', //  fallback
       verificationStatus: user.isVerified ? 'Verified' : 'Pending'
     }));
 
-    console.log('✅ Admin users fetched:', formattedUsers.length);
+    console.log(' Admin users fetched:', formattedUsers.length);
 
     res.json({
       ok: true,
@@ -176,7 +176,7 @@ router.get('/users', requireAuth, requireRole('ADMIN'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Admin users fetch error:', error);
+    console.error(' Admin users fetch error:', error);
     res.status(500).json({
       ok: false,
       error: 'Failed to fetch users'
@@ -403,7 +403,7 @@ router.patch('/orders/:orderId/status', requireAuth, requireRole('ADMIN'), async
 });
 
 /* =========================
-   ✅ NEW: PAYMENTS (FIXED 404)
+   NEW: PAYMENTS (FIXED 404)
 ========================= */
 router.get('/payments', requireAuth, requireRole('ADMIN'), async (req, res) => {
   try {

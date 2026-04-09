@@ -26,9 +26,12 @@ import Failure from "./components/Failure";
 import PaymentComponent from "./components/Payment";
 import Success from "./components/Success";
 import EditCrop from './pages/farmer/EditCrop.jsx';
-
+import DemandRequest from './pages/DemandRequest.jsx';
+// import MyDemandPosts from './pages/MyDemandPost.jsx';
+// import DemandMarketplace from './pages/DemandMarketplace.jsx';
 import ForgotPassword from './pages/ForgetPassword';
 import ResetPassword from './pages/ResetPassword';
+import BrowseDemands from "./pages/BrowseDemands";
 
 function NavBar() {
   const { t, i18n } = useTranslation();
@@ -178,10 +181,14 @@ function NavBar() {
 
             {/* Buyer */}
             {user?.role === 'BUYER' && <Link to="/buyer/orders" className="nav-link">My Orders</Link>}
+             
+{user?.role === 'BUYER' && <Link to="/buyer/demand" className="nav-link">Post Demand</Link>}
+             
 
             {/* Farmer */}
             {user?.role === 'FARMER' && <Link to="/farmer" className="nav-link">{t('dashboard')}</Link>}
             {user?.role === 'FARMER' && <Link to="/farmer/orders" className="nav-link">Customer Orders</Link>}
+           {user?.role === 'FARMER' && <Link to="/farmer/demands" className="nav-link">Buyer Demands</Link>}
 
             {/* Admin (now stronger role) */}
             {user?.role === 'ADMIN' && (
@@ -191,6 +198,10 @@ function NavBar() {
     <Link to="/admin/transactions" className="nav-link">Transactions</Link>
     <Link to="/admin/reports" className="nav-link">Reports</Link>
     <Link to="/admin/payments" className="nav-link">Payments</Link>
+    <Link to="/admin/demands" className="nav-link">Demand Requests</Link>
+   
+{/* <Link to="/buyer/demands">My Demands</Link>
+<Link to="/demands">Demand Requests</Link> */}
                 {/* <Link to="/farmer" className="nav-link">Farmer Dashboard</Link> */}
                 {/* <Link to="/buyer/orders" className="nav-link">All Orders</Link> */}
               </>
@@ -251,6 +262,31 @@ export default function App() {
 <Route path="/admin/transactions" element={<Protected roles={['ADMIN']}><AdminTransactions /></Protected>} />
 <Route path="/admin/reports" element={<Protected roles={['ADMIN']}><AdminReports /></Protected>} />
 <Route path="/admin/payments" element={<Protected roles={['ADMIN']}><AdminPayments /></Protected>} />
+
+<Route
+  path="/buyer/demand"
+  element={
+    <Protected roles={['BUYER', 'ADMIN']}>
+      <DemandRequest />
+    </Protected>
+  }
+/>
+<Route path="/farmer/demands" element={<BrowseDemands />} />
+<Route path="/admin/demands" element={<BrowseDemands />} />
+
+{/* <Route
+  path="/buyer/demands"
+  element={
+    <Protected roles={['BUYER', 'ADMIN']}>
+      <MyDemandPosts />
+    </Protected>
+  }
+/> */}
+
+{/* <Route
+  path="/demands"
+  element={<DemandMarketplace />}
+/> */}
 
         <Route path="/" element={<Home />} />
         <Route path="/market" element={<Marketplace />} />

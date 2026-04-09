@@ -101,18 +101,21 @@ model Inventory {
 }
 
 model DemandPost {
-  id      String @id @default(cuid())
-  buyerId String
-  buyer   User   @relation("BuyerDemandPosts", fields: [buyerId], references: [id], onDelete: Cascade)
-
-  titleEn      String
-  titleNp      String
-  category     String
-  quantity     Float
-  unit         String
-  district     String?
-  municipality String?
-  createdAt    DateTime @default(now())
+  id                    String   @id @default(cuid())
+  buyerId               String
+  buyer                 User     @relation("BuyerDemandPosts", fields: [buyerId], references: [id])
+  cropName              String
+  quantity              Float
+  unit                  String
+  budget                Float?
+  preferredDistrict     String
+  preferredMunicipality String?
+  deliveryAddress       String
+  description           String?
+  buyerName             String
+  buyerPhone            String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 model Order {
