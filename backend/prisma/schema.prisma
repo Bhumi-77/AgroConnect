@@ -1,10 +1,11 @@
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+   url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -53,10 +54,10 @@ model User {
   orders       Order[]   @relation("BuyerOrders")
   sentMessages Message[] @relation("SentMessages")
 
-  // ✅ Opposite field for DemandPost.buyer
+  // Opposite field for DemandPost.buyer
   demandPosts DemandPost[] @relation("BuyerDemandPosts")
 
-  // ✅ Opposite fields for ChatRoom buyer/farmer relations
+  // Opposite fields for ChatRoom buyer/farmer relations
   buyerChatRooms  ChatRoom[] @relation("BuyerChatRooms")
   farmerChatRooms ChatRoom[] @relation("FarmerChatRooms")
 }
@@ -161,7 +162,7 @@ model ChatRoom {
   farmerId  String
   createdAt DateTime @default(now())
 
-  // ✅ Add proper relations so Prisma knows buyerId/farmerId point to User
+  //  Add proper relations so Prisma knows buyerId/farmerId point to User
   buyer  User @relation("BuyerChatRooms", fields: [buyerId], references: [id], onDelete: Cascade)
   farmer User @relation("FarmerChatRooms", fields: [farmerId], references: [id], onDelete: Cascade)
 

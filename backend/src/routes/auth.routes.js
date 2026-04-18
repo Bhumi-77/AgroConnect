@@ -7,11 +7,11 @@ import { signToken } from '../utils/jwt.js';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 
-// console.log('✅ auth.routes.js loaded');
+// console.log(' auth.routes.js loaded');
 
 const router = Router();
 
-// console.log('✅ router created');
+// console.log(' router created');
 
 router.post('/register',
   body('fullName').isLength({ min: 2 }),
