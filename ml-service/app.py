@@ -6,6 +6,10 @@ import pandas as pd
 import datetime as dt
 import json
 from pathlib import Path
+import os
+import joblib
+
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "model.joblib")
 
 app = FastAPI()
 
@@ -51,3 +55,9 @@ def predict(req: PredictRequest):
         "confidence": 0.6,
         "modelVersion": "RandomForest v1"
     }
+# Train model if not found
+if not os.path.exists(MODEL_PATH):
+    print("Model not found, training now...")
+    import train_model  # runs train_model.py
+    
+model = joblib.load(MODEL_PATH)
