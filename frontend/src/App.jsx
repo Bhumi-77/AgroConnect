@@ -38,6 +38,8 @@ function NavBar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const [isOpen, setIsOpen] = React.useState(false);
+
   const setLang = (lng) => {
     i18n.changeLanguage(lng);
     localStorage.setItem('lang', lng);
@@ -97,11 +99,6 @@ function NavBar() {
           font-weight: 500;
           cursor: pointer;
           outline: none;
-          transition: all 0.2s;
-        }
-        .nav-select:hover {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: rgba(255, 255, 255, 0.4);
         }
         .nav-select option {
           background: #4a7c3b;
@@ -116,12 +113,6 @@ function NavBar() {
           font-weight: 600;
           border: 1px solid rgba(255, 255, 255, 0.2);
           text-decoration: none;
-          transition: all 0.2s;
-          display: inline-block;
-        }
-        .nav-badge:hover {
-          background: rgba(255, 255, 255, 0.25);
-          border-color: rgba(255, 255, 255, 0.3);
         }
         .nav-btn-secondary {
           padding: 8px 16px;
@@ -129,14 +120,7 @@ function NavBar() {
           color: white;
           border: 1px solid rgba(255, 255, 255, 0.3);
           border-radius: 6px;
-          font-size: 14px;
-          font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s;
-        }
-        .nav-btn-secondary:hover {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: rgba(255, 255, 255, 0.4);
         }
         .nav-btn-primary {
           padding: 8px 20px;
@@ -144,75 +128,112 @@ function NavBar() {
           color: #4a7c3b;
           border: none;
           border-radius: 6px;
-          font-size: 14px;
           font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
           text-decoration: none;
-          display: inline-block;
         }
-        .nav-btn-primary:hover {
-          background: #f0f0f0;
-          transform: translateY(-1px);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+        /* Layout */
+        .nav-container {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          position: relative;
+        }
+
+        .nav-links {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .hamburger {
+          display: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: white;
+        }
+
+        /* MOBILE */
+        @media (max-width: 768px) {
+          .hamburger {
+            display: block;
+          }
+
+          .nav-links {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            background: #4a7c3b;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 16px;
+            display: none;
+          }
+
+          .nav-links.open {
+            display: flex;
+          }
+
+          .nav-link, .nav-brand {
+            width: 100%;
+            padding: 12px 0;
+          }
         }
       `}</style>
 
-      <div style={{
-        maxWidth: '1400px',
-        margin: '0 auto',
-        padding: '12px 24px'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 16
-        }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '12px 24px' }}>
+        <div className="nav-container">
 
-          {/* Left */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Link to="/" className="nav-brand">
-              <span style={{ fontSize: '24px' }}>🌾</span>
-              {t('appName')}
+          {/* LEFT */}
+          <div className={`nav-links ${isOpen ? 'open' : ''}`}>
+
+            <Link to="/" className="nav-brand" onClick={() => setIsOpen(false)}>
+              🌾 {t('appName')}
             </Link>
 
-            <Link to="/market" className="nav-link">{t('marketplace')}</Link>
+            <Link to="/market" className="nav-link" onClick={() => setIsOpen(false)}>
+              {t('marketplace')}
+            </Link>
 
-            {/* Buyer */}
-            {user?.role === 'BUYER' && <Link to="/buyer/orders" className="nav-link">My Orders</Link>}
-             
-{user?.role === 'BUYER' && <Link to="/buyer/demand" className="nav-link">Post Demand</Link>}
-             
-
-            {/* Farmer */}
-            {user?.role === 'FARMER' && <Link to="/farmer" className="nav-link">{t('dashboard')}</Link>}
-            {user?.role === 'FARMER' && <Link to="/farmer/orders" className="nav-link">Customer Orders</Link>}
-           {user?.role === 'FARMER' && <Link to="/farmer/demands" className="nav-link">Buyer Demands</Link>}
-
-            {/* Admin (now stronger role) */}
-            {user?.role === 'ADMIN' && (
+            {user?.role === 'BUYER' && (
               <>
-                <Link to="/admin" className="nav-link">Dashboard</Link>
-    <Link to="/admin/users" className="nav-link">Users</Link>
-    <Link to="/admin/transactions" className="nav-link">Transactions</Link>
-    <Link to="/admin/reports" className="nav-link">Reports</Link>
-    <Link to="/admin/payments" className="nav-link">Payments</Link>
-    <Link to="/admin/demands" className="nav-link">Demand Requests</Link>
-   
-{/* <Link to="/buyer/demands">My Demands</Link>
-<Link to="/demands">Demand Requests</Link> */}
-                {/* <Link to="/farmer" className="nav-link">Farmer Dashboard</Link> */}
-                {/* <Link to="/buyer/orders" className="nav-link">All Orders</Link> */}
+                <Link to="/buyer/orders" className="nav-link" onClick={() => setIsOpen(false)}>My Orders</Link>
+                <Link to="/buyer/demand" className="nav-link" onClick={() => setIsOpen(false)}>Post Demand</Link>
               </>
             )}
 
-            {user && <Link to="/price" className="nav-link">AI Price</Link>}
-            {user && <Link to="/chat" className="nav-link">{t('chat')}</Link>}
+            {user?.role === 'FARMER' && (
+              <>
+                <Link to="/farmer" className="nav-link" onClick={() => setIsOpen(false)}>{t('dashboard')}</Link>
+                <Link to="/farmer/orders" className="nav-link" onClick={() => setIsOpen(false)}>Customer Orders</Link>
+                <Link to="/farmer/demands" className="nav-link" onClick={() => setIsOpen(false)}>Buyer Demands</Link>
+              </>
+            )}
+
+            {user?.role === 'ADMIN' && (
+              <>
+                <Link to="/admin" className="nav-link" onClick={() => setIsOpen(false)}>Dashboard</Link>
+                <Link to="/admin/users" className="nav-link" onClick={() => setIsOpen(false)}>Users</Link>
+                <Link to="/admin/transactions" className="nav-link" onClick={() => setIsOpen(false)}>Transactions</Link>
+                <Link to="/admin/reports" className="nav-link" onClick={() => setIsOpen(false)}>Reports</Link>
+                <Link to="/admin/payments" className="nav-link" onClick={() => setIsOpen(false)}>Payments</Link>
+                <Link to="/admin/demands" className="nav-link" onClick={() => setIsOpen(false)}>Demand Requests</Link>
+              </>
+            )}
+
+            {user && <Link to="/price" className="nav-link" onClick={() => setIsOpen(false)}>AI Price</Link>}
+            {user && <Link to="/chat" className="nav-link" onClick={() => setIsOpen(false)}>{t('chat')}</Link>}
           </div>
 
-          {/* Right */}
+          {/* RIGHT */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+
+            {/* Hamburger */}
+            <div className="hamburger" onClick={() => setIsOpen(!isOpen)}>
+              ☰
+            </div>
+
             <select
               className="nav-select"
               value={i18n.language}
