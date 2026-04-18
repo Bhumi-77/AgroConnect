@@ -3,7 +3,7 @@ node_modules
 dist
 uploads
 *.log
-.model.joblib
+model.joblib
 
 # ML artifacts
 ml-service/model.joblib
