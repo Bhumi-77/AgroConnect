@@ -11,3 +11,4 @@ ml-service/*.joblib
 ml-service/__pycache__/
 ml-service/.venv/
 ml-service/.env
+ml-service/model.joblib
