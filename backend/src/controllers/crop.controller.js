@@ -1,7 +1,7 @@
 import { prisma } from '../index.js';
-import path from 'path';
+// import path from 'path';
 
-// ✅ GET All Crops with filters
+//  GET All Crops with filters
 export const getAllCrops = async (req, res, next) => {
   try {
     const { q, category, district, municipality, minPrice, maxPrice, active, farmerId } = req.query;
@@ -121,7 +121,7 @@ export const getCropById = async (req, res, next) => {
 export const createCrop = async (req, res, next) => {
   try {
     const files = req.files || [];
-    const images = files.map(f => `/uploads/${path.basename(f.path)}`);
+const images = files.map(f => f.path); 
 
     const {
       titleEn, titleNp, category, descriptionEn, descriptionNp,
