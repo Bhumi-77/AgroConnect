@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import joblib
@@ -9,7 +10,6 @@ from pathlib import Path
 
 app = FastAPI()
 
-# allow frontend/backend to call ML service
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,15 +19,25 @@ app.add_middleware(
 )
 
 BASE_DIR = Path(__file__).resolve().parent
-
 MODEL_PATH = BASE_DIR / "model.joblib"
-model = joblib.load(MODEL_PATH)
-
 PRODUCTS_PATH = BASE_DIR / "products.json"
+
+# Lazy load to save memory at startup
+model = None
+
+def get_model():
+    global model
+    if model is None:
+        model = joblib.load(MODEL_PATH)
+    return model
 
 class PredictRequest(BaseModel):
     product: str
     horizonDays: int = 7
+
+@app.get("/")
+def root():
+    return {"status": "ML service is running"}
 
 @app.get("/products")
 def products():
@@ -36,15 +46,12 @@ def products():
 @app.post("/predict")
 def predict(req: PredictRequest):
     future_date = dt.datetime.now() + dt.timedelta(days=req.horizonDays)
-
     X = pd.DataFrame([{
         "product": req.product,
         "dayofweek": future_date.weekday(),
         "month": future_date.month
     }])
-
-    pred = float(model.predict(X)[0])
-
+    pred = float(get_model().predict(X)[0])
     return {
         "ok": True,
         "predicted": round(pred, 2),
