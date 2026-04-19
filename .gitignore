@@ -1,14 +1,12 @@
-node_modules
+node_modules/
 .env
-dist
-uploads
+dist/
+uploads/
 *.log
-model.joblib
 
 # ML artifacts
-ml-service/model.joblib
+model.joblib
 ml-service/*.joblib
 ml-service/__pycache__/
 ml-service/.venv/
 ml-service/.env
-ml-service/model.joblib
