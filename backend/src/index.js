@@ -29,7 +29,12 @@ const app = express();
 
 // ✅ CORS configuration
 const corsOptions = {
-  origin: process.env.CLIENT_URL || "*",
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://krishi-connect-nepal.vercel.app",
+    process.env.CLIENT_URL,
+  ].filter(Boolean),
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -133,6 +138,7 @@ io.on("connection", (socket) => {
 // );
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, '0.0.0.0', () => {
+// Use server.listen NOT app.listen — required for Socket.IO
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
