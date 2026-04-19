@@ -50,16 +50,17 @@ async function main() {
     }
   });
 
+  // ✅ FIXED: removed invalid fields, added all required fields
   await prisma.demandPost.create({
     data: {
       buyerId: buyer.id,
-      titleEn: 'Need Potatoes weekly',
-      titleNp: 'साप्ताहिक आलु चाहियो',
-      category: 'vegetables',
+      cropName: 'Potato',
       quantity: 100,
       unit: 'kg',
-      district: 'Kathmandu',
-      municipality: 'KMC'
+      preferredDistrict: 'Kathmandu',
+      deliveryAddress: 'Kathmandu, Nepal',
+      buyerName: 'Demo Buyer',
+      buyerPhone: '9800000000',
     }
   });
 
