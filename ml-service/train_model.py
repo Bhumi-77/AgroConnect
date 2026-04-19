@@ -68,23 +68,27 @@ def main():
     df["month"] = df["date"].dt.month
 
     # Sample to reduce memory usage on free tier
-    if len(df) > 20000:
-        df = df.sample(20000, random_state=42)
+    # Sample data heavily to save memory
+    if len(df) > 10000:
+        df = df.sample(10000, random_state=42)
 
     X = df[["product", "dayofweek", "month"]]
     y = df[target]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
 
     pre = ColumnTransformer(transformers=[
         ("cat", OneHotEncoder(handle_unknown="ignore"), ["product"]),
         ("num", "passthrough", ["dayofweek", "month"]),
     ])
 
+    # Very light model for free tier
+    from sklearn.linear_model import Ridge
     model = Pipeline(steps=[
         ("pre", pre),
-        # Reduced from 200 to 50 trees, max_depth=10 to save memory
-        ("rf", RandomForestRegressor(n_estimators=50, max_depth=10, random_state=42, n_jobs=1)),
+        ("model", Ridge()),  # Ridge is tiny compared to RandomForest
     ])
 
     model.fit(X_train, y_train)
